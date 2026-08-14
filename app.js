@@ -1054,6 +1054,8 @@ async function iniciarSistemaDividas() {
 
     await carregarPessoasDividas();
 
+    await carregarDividas();
+
 }
 
 
@@ -1065,3 +1067,303 @@ document.addEventListener(
     "DOMContentLoaded",
     iniciarSistemaDividas
 );
+
+/* =====================================
+   REGISTAR DÍVIDA
+===================================== */
+
+async function registarDivida() {
+
+    const pagadorId =
+        Number(
+            document.getElementById(
+                "pagadorDivida"
+            ).value
+        );
+
+    const devedorId =
+        Number(
+            document.getElementById(
+                "devedorDivida"
+            ).value
+        );
+
+    const descricao =
+        document.getElementById(
+            "descricaoDivida"
+        ).value.trim();
+
+    const valorTotal =
+        parseFloat(
+            document.getElementById(
+                "valorTotalDivida"
+            ).value
+        );
+
+    const valorDevido =
+        parseFloat(
+            document.getElementById(
+                "valorDevido"
+            ).value
+        );
+
+    const data =
+        document.getElementById(
+            "dataDivida"
+        ).value;
+
+    if (
+        !pagadorId ||
+        !devedorId ||
+        pagadorId === devedorId ||
+        !descricao ||
+        isNaN(valorTotal) ||
+        valorTotal <= 0 ||
+        isNaN(valorDevido) ||
+        valorDevido <= 0 ||
+        valorDevido > valorTotal ||
+        !data
+    ) {
+        alert(
+            "Preencha corretamente os campos."
+        );
+        return;
+    }
+
+    /* -----------------------------
+       1. Criar despesa partilhada
+    ----------------------------- */
+
+    const {
+        data: despesa,
+        error: erroDespesa
+    } =
+        await supabaseClient
+            .from("despesas_partilhadas")
+            .insert([
+                {
+                    descricao: descricao,
+                    valor: valorTotal,
+                    pagador_id: pagadorId,
+                    date: data
+                }
+            ])
+            .select()
+            .single();
+
+    if (erroDespesa) {
+
+        console.error(erroDespesa);
+
+        alert(
+            "Erro ao criar despesa:\n" +
+            erroDespesa.message
+        );
+
+        return;
+    }
+
+    /* -----------------------------
+       2. Criar dívida
+    ----------------------------- */
+
+    const {
+        error: erroDivida
+    } =
+        await supabaseClient
+            .from("dividas")
+            .insert([
+                {
+                    despesa_id: despesa.id,
+                    devedor_id: devedorId,
+                    credor_id: pagadorId,
+                    valor: valorDevido,
+                    liquidado: false
+                }
+            ]);
+
+    if (erroDivida) {
+
+        console.error(erroDivida);
+
+        alert(
+            "A despesa foi criada, mas houve um erro ao criar a dívida:\n" +
+            erroDivida.message
+        );
+
+        return;
+    }
+
+    alert(
+        "Dívida registada com sucesso!"
+    );
+
+    document.getElementById(
+        "descricaoDivida"
+    ).value = "";
+
+    document.getElementById(
+        "valorTotalDivida"
+    ).value = "";
+
+    document.getElementById(
+        "valorDevido"
+    ).value = "";
+
+    await carregarDividas();
+
+}
+
+/* =====================================
+   CARREGAR DÍVIDAS
+===================================== */
+
+async function carregarDividas() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from("dividas")
+            .select(`
+                id,
+                valor,
+                liquidado,
+                devedor_id,
+                credor_id,
+                pessoas_devedor:pessoas!dividas_devedor_id_fkey (
+                    nome
+                ),
+                pessoas_credor:pessoas!dividas_credor_id_fkey (
+                    nome
+                ),
+                despesas_partilhadas (
+                    descricao,
+                    valor,
+                    date
+                )
+            `)
+            .eq("liquidado", false)
+            .order("id", {
+                ascending: false
+            });
+
+    if (error) {
+
+        console.error(
+            "Erro ao carregar dívidas:",
+            error
+        );
+
+        document.getElementById(
+            "listaDividas"
+        ).innerHTML =
+            "Erro ao carregar dívidas.";
+
+        return;
+    }
+
+    const container =
+        document.getElementById(
+            "listaDividas"
+        );
+
+    if (!data || data.length === 0) {
+
+        container.innerHTML =
+            "Não existem dívidas pendentes.";
+
+        return;
+    }
+
+    container.innerHTML = "";
+
+    data.forEach(divida => {
+
+        const div =
+            document.createElement(
+                "div"
+            );
+
+        div.className =
+            "resumo-item";
+
+        const devedor =
+            divida.pessoas_devedor?.nome ||
+            "Desconhecido";
+
+        const credor =
+            divida.pessoas_credor?.nome ||
+            "Desconhecido";
+
+        const descricao =
+            divida.despesas_partilhadas
+                ?.descricao ||
+            "Despesa";
+
+        div.innerHTML = `
+            <strong>
+                ${devedor} deve
+                ${euro(divida.valor)}
+                a ${credor}
+            </strong>
+
+            <br>
+
+            <small>
+                ${descricao}
+            </small>
+
+            <br>
+
+            <button
+                onclick="liquidarDivida(${divida.id})">
+                Marcar como paga
+            </button>
+        `;
+
+        container.appendChild(div);
+
+    });
+
+}
+
+/* =====================================
+   LIQUIDAR DÍVIDA
+===================================== */
+
+async function liquidarDivida(id) {
+
+    const confirmar =
+        confirm(
+            "Marcar esta dívida como paga?"
+        );
+
+    if (!confirmar) {
+        return;
+    }
+
+    const {
+        error
+    } =
+        await supabaseClient
+            .from("dividas")
+            .update({
+                liquidado: true
+            })
+            .eq("id", id);
+
+    if (error) {
+
+        alert(
+            "Erro: " +
+            error.message
+        );
+
+        return;
+    }
+
+    await carregarDividas();
+
+}

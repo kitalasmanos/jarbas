@@ -106,7 +106,7 @@ function adicionarMovimento() {
 
     dados.movimentos.push({
 
-        id: Data.now(),
+        id: Date.now(),
 
         tipo,
 

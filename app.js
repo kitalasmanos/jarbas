@@ -449,6 +449,8 @@ function atualizarTudo() {
 
     atualizarResumoCategorias();
 
+    atualizarGrafico();
+
 }
 
 /* =====================================
@@ -814,3 +816,122 @@ document.addEventListener(
     "DOMContentLoaded",
     iniciarAplicacao
 );
+
+/* =====================================
+   FILTRO MENSAL
+===================================== */
+
+let grafico = null;
+
+function aplicarFiltroMes() {
+
+    const mes =
+        document.getElementById(
+            "filtroMes"
+        ).value;
+
+    if (!mes) {
+
+        renderTabela(
+            dados.movimentos
+        );
+
+        atualizarGrafico(
+            dados.movimentos
+        );
+
+        return;
+    }
+
+    const lista =
+        dados.movimentos.filter(
+            m => m.data.startsWith(mes)
+        );
+
+    renderTabela(lista);
+
+    atualizarGrafico(lista);
+
+}
+
+/* =====================================
+   GRÁFICO CATEGORIAS
+===================================== */
+
+function atualizarGrafico(
+    lista = dados.movimentos
+) {
+
+    const totais = {};
+
+    lista.forEach(m => {
+
+        if (
+            m.tipo === "despesa"
+        ) {
+
+            totais[m.categoria] =
+                (totais[m.categoria] || 0) +
+                Number(m.valor);
+
+        }
+
+    });
+
+    const labels =
+        Object.keys(totais);
+
+    const valores =
+        Object.values(totais);
+
+    const canvas =
+        document.getElementById(
+            "graficoCategorias"
+        );
+
+    if (!canvas) return;
+
+    const ctx =
+        canvas.getContext("2d");
+
+    if (grafico) {
+
+        grafico.destroy();
+
+    }
+
+    grafico = new Chart(
+        ctx, {
+            type: "pie",
+
+            data: {
+
+                labels,
+
+                datasets: [
+
+                    {
+                        data: valores
+                    }
+
+                ]
+            },
+
+            options: {
+
+                responsive: true,
+
+                plugins: {
+
+                    legend: {
+                        position: "bottom"
+                    }
+
+                }
+
+            }
+
+        }
+    );
+
+}

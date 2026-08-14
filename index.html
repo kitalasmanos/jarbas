@@ -11,6 +11,7 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
 </head>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <body>
 
@@ -238,6 +239,25 @@
             <div id="resumoCategorias">
 
             </div>
+
+        </section>
+
+        <section class="card">
+
+            <h2>📈 Estatísticas</h2>
+
+            <div class="form-grid">
+
+                <div>
+                    <label>Mês</label>
+
+                    <input type="month" id="filtroMes" onchange="aplicarFiltroMes()">
+                </div>
+
+            </div>
+
+            <canvas id="graficoCategorias" height="120">
+    </canvas>
 
         </section>
 

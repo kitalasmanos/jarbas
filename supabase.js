@@ -1,4 +1,4 @@
-const SUPABASE_URL = "https://unoynpwkpvmyzdoyyvov.supabase.co";
+const SUPABASE_URL = "https://unoynpwkpvmyzdoywyov.supabase.co/rest/v1/";
 const SUPABASE_KEY = "sb_publishable_gH615f9gg0kVHqVTfcKDdw_NRPhHG0I";
 
 const supabaseClient = supabase.createClient(
@@ -6,20 +6,35 @@ const supabaseClient = supabase.createClient(
     SUPABASE_KEY
 );
 
-alert("Script carregado");
+async function carregarPessoas() {
 
-async function testar() {
-
-    alert("A testar Supabase");
-
-    const resultado =
+    const { data, error } =
         await supabaseClient
             .from("pessoas")
-            .select("*");
+            .select("*")
+            .order("nome");
+
+    if (error) {
+
+        console.error(error);
+
+        alert(
+            "Erro ao carregar pessoas"
+        );
+
+        return;
+    }
+
+    console.log(
+        "Pessoas:",
+        data
+    );
 
     alert(
-        JSON.stringify(resultado)
+        "Encontradas " +
+        data.length +
+        " pessoas"
     );
 }
 
-testar();
+carregarPessoas();

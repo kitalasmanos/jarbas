@@ -4,398 +4,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controlo de Gastos</title>
+    <title>Gestor Financeiro</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f9;
-            margin: 0;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1100px;
-            margin: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 25px;
-        }
-        
-        .formulario {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        
-        input,
-        select,
-        button {
-            padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            font-size: 15px;
-        }
-        
-        button {
-            cursor: pointer;
-            border: none;
-            font-weight: bold;
-        }
-        
-        .btn-add {
-            background: #28a745;
-            color: white;
-        }
-        
-        .btn-print {
-            background: #007bff;
-            color: white;
-            margin-bottom: 15px;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        .table-container {
-            overflow-x: auto;
-        }
-        
-        th,
-        td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: center;
-        }
-        
-        th {
-            background: #343a40;
-            color: white;
-        }
-        
-        .apagar {
-            background: #dc3545;
-            color: white;
-            padding: 5px 10px;
-        }
-        
-        .resumo {
-            margin-top: 25px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .total {
-            font-size: 24px;
-            font-weight: bold;
-            color: #28a745;
-        }
-        
-        .categoria-box {
-            background: white;
-            border-left: 5px solid #007bff;
-            padding: 10px;
-            margin-bottom: 15px;
-            border-radius: 5px;
-        }
-        
-        .categoria-box h3 {
-            margin-top: 0;
-        }
-        
-        .categoria-box ul {
-            margin: 0;
-            padding-left: 20px;
-        }
-        
-        .categoria-total {
-            font-weight: bold;
-            color: #007bff;
-        }
-        
-        @media(max-width:768px) {
-            body {
-                padding: 10px;
-            }
-            .container {
-                padding: 15px;
-            }
-            h1 {
-                font-size: 24px;
-            }
-            .total {
-                font-size: 20px;
-            }
-        }
-        
-        @media print {
-            .formulario,
-            .btn-print,
-            .apagar {
-                display: none;
-            }
-            body {
-                background: white;
-            }
-            .container {
-                box-shadow: none;
-            }
-        }
-    </style>
+    <meta name="theme-color" content="#16a34a">
 
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-    <div class="container">
+    <header class="header">
+        <h1>💰 Gestor Financeiro</h1>
+        <p>Receitas • Despesas • Orçamento • Estatísticas</p>
+    </header>
 
-        <h1>💰 Controlo de Gastos Mensais</h1>
+    <main class="container">
 
-        <div class="formulario">
+        <!-- DASHBOARD -->
 
-            <input type="date" id="data">
+        <section class="card">
 
-            <select id="categoria">
-            <option>Supermercado</option>
-            <option>Gasolina</option>
-            <option>Portagens</option>
-            <option>Comer Fora</option>
-            <option>Água</option>
-            <option>Luz</option>
-            <option>Gás</option>
-            <option>Outros</option>
-        </select>
+            <h2>📊 Dashboard</h2>
 
-            <input type="text" id="descricao" placeholder="Descrição">
+            <div class="dashboard">
 
-            <input type="number" id="valor" step="0.01" placeholder="Valor (€)">
+                <div class="stat-card saldo">
+                    <h3>Saldo Atual</h3>
+                    <p id="saldoAtual">€ 0.00</p>
+                </div>
 
-            <button class="btn-add" onclick="adicionarGasto()">
-            Adicionar
+                <div class="stat-card receita">
+                    <h3>Receitas</h3>
+                    <p id="totalReceitas">€ 0.00</p>
+                </div>
+
+                <div class="stat-card despesa">
+                    <h3>Despesas</h3>
+                    <p id="totalDespesas">€ 0.00</p>
+                </div>
+
+                <div class="stat-card orcamento">
+                    <h3>Orçamento Restante</h3>
+                    <p id="orcamentoRestante">€ 0.00</p>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- ORÇAMENTO -->
+
+        <section class="card">
+
+            <h2>🎯 Orçamento Mensal</h2>
+
+            <div class="form-grid">
+
+                <div>
+                    <label>Orçamento (€)</label>
+                    <input type="number" id="orcamentoMensal" step="0.01" placeholder="1000">
+                </div>
+
+                <div>
+                    <button onclick="guardarOrcamento()">
+                    Guardar Orçamento
+                </button>
+                </div>
+
+            </div>
+
+            <div class="progress-container">
+                <div id="progressBar"></div>
+            </div>
+
+            <p id="percentagemOrcamento">
+                0% utilizado
+            </p>
+
+        </section>
+
+        <!-- NOVO MOVIMENTO -->
+
+        <section class="card">
+
+            <h2>➕ Novo Movimento</h2>
+
+            <div class="form-grid">
+
+                <div>
+                    <label>Tipo</label>
+
+                    <select id="tipo">
+
+                    <option value="receita">
+                        Receita
+                    </option>
+
+                    <option value="despesa">
+                        Despesa
+                    </option>
+
+                </select>
+                </div>
+
+                <div>
+
+                    <label>Categoria</label>
+
+                    <select id="categoria">
+
+                    <optgroup label="Receitas">
+                        <option>Salário</option>
+                        <option>Prémios</option>
+                        <option>Reembolsos</option>
+                        <option>Outros</option>
+                    </optgroup>
+
+                    <optgroup label="Despesas">
+                        <option>Supermercado</option>
+                        <option>Gasolina</option>
+                        <option>Portagens</option>
+                        <option>Comer Fora</option>
+                        <option>Água</option>
+                        <option>Luz</option>
+                        <option>Gás</option>
+                        <option>Casa</option>
+                        <option>Telecomunicações</option>
+                        <option>Saúde</option>
+                        <option>Lazer</option>
+                        <option>Outros</option>
+                    </optgroup>
+
+                </select>
+
+                </div>
+
+                <div>
+                    <label>Descrição</label>
+
+                    <input type="text" id="descricao" placeholder="Descrição">
+                </div>
+
+                <div>
+                    <label>Valor (€)</label>
+
+                    <input type="number" id="valor" step="0.01" placeholder="0.00">
+                </div>
+
+                <div>
+                    <label>Data</label>
+
+                    <input type="date" id="dataMovimento">
+                </div>
+
+                <div>
+                    <button onclick="adicionarMovimento()">
+                    Adicionar
+                </button>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- PESQUISA -->
+
+        <section class="card">
+
+            <h2>🔍 Pesquisa e Filtros</h2>
+
+            <div class="form-grid">
+
+                <div>
+                    <label>Pesquisar</label>
+
+                    <input type="text" id="pesquisa" placeholder="Descrição..." onkeyup="filtrarMovimentos()">
+                </div>
+
+                <div>
+                    <label>Categoria</label>
+
+                    <select id="filtroCategoria" onchange="filtrarMovimentos()">
+
+                    <option value="">
+                        Todas
+                    </option>
+
+                </select>
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- HISTÓRICO -->
+
+        <section class="card">
+
+            <h2>📅 Histórico de Movimentos</h2>
+
+            <div class="table-responsive">
+
+                <table>
+
+                    <thead>
+                        <tr>
+                            <th>Data</th>
+                            <th>Tipo</th>
+                            <th>Categoria</th>
+                            <th>Descrição</th>
+                            <th>Valor</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="tabelaMovimentos">
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+        <!-- RESUMO -->
+
+        <section class="card">
+
+            <h2>📊 Resumo por Categoria</h2>
+
+            <div id="resumoCategorias">
+
+            </div>
+
+        </section>
+
+        <!-- DADOS -->
+
+        <section class="card">
+
+            <h2>💾 Dados</h2>
+
+            <div class="actions">
+
+                <button onclick="exportarJSON()">
+                Exportar JSON
+            </button>
+
+                <button onclick="exportarCSV()">
+                Exportar CSV
+            </button>
+
+                <button onclick="window.print()">
+                Imprimir
+            </button>
+
+            </div>
+
+            <br>
+
+            <input type="file" id="importFile" accept=".json">
+
+            <button onclick="importarJSON()">
+            Importar Backup
         </button>
 
-        </div>
+        </section>
 
-        <button class="btn-print" onclick="window.print()">
-        🖨️ Imprimir Relatório
-    </button>
+    </main>
 
-        <div class="table-container">
+    <footer>
 
-            <table>
+        <p>
+            Gestor Financeiro © 2026
+        </p>
 
-                <thead>
-                    <tr>
-                        <th>Data</th>
-                        <th>Categoria</th>
-                        <th>Descrição</th>
-                        <th>Valor (€)</th>
-                        <th>Ação</th>
-                    </tr>
-                </thead>
+    </footer>
 
-                <tbody id="tabelaGastos"></tbody>
-
-            </table>
-
-        </div>
-
-        <div class="resumo">
-
-            <h2>📈 Resumo Mensal</h2>
-
-            <div id="resumoCategorias"></div>
-
-            <p class="total">
-                Total Geral: € <span id="totalGeral">0.00</span>
-            </p>
-
-        </div>
-
-        <div class="resumo">
-
-            <h2>📊 Gastos por Categoria</h2>
-
-            <div id="detalheCategorias"></div>
-
-        </div>
-
-    </div>
+    <script src="app.js"></script>
 
     <script>
-        let gastos =
-            JSON.parse(localStorage.getItem("gastos")) || [];
-
-        document.getElementById("data").value =
-            new Date().toISOString().split("T")[0];
-
-        function adicionarGasto() {
-
-            const data =
-                document.getElementById("data").value;
-
-            const categoria =
-                document.getElementById("categoria").value;
-
-            const descricao =
-                document.getElementById("descricao").value.trim();
-
-            const valor =
-                parseFloat(
-                    document.getElementById("valor").value
-                );
-
-            if (!descricao || isNaN(valor) || valor <= 0) {
-                alert("Preencha corretamente a descrição e o valor.");
-                return;
-            }
-
-            gastos.push({
-                data,
-                categoria,
-                descricao,
-                valor
-            });
-
-            guardar();
-            atualizarTabela();
-
-            document.getElementById("descricao").value = "";
-            document.getElementById("valor").value = "";
-        }
-
-        function apagarGasto(index) {
-
-            if (confirm("Deseja apagar este registo?")) {
-
-                gastos.splice(index, 1);
-
-                guardar();
-                atualizarTabela();
-            }
-        }
-
-        function guardar() {
-
-            localStorage.setItem(
-                "gastos",
-                JSON.stringify(gastos)
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register(
+                'service-worker.js'
             );
         }
-
-        function atualizarTabela() {
-
-            const tabela =
-                document.getElementById("tabelaGastos");
-
-            tabela.innerHTML = "";
-
-            let totalGeral = 0;
-
-            const categorias = {};
-
-            gastos.forEach((gasto, index) => {
-
-                totalGeral += gasto.valor;
-
-                categorias[gasto.categoria] =
-                    (categorias[gasto.categoria] || 0) +
-                    gasto.valor;
-
-                tabela.innerHTML += `
-        <tr>
-            <td>${gasto.data}</td>
-            <td>${gasto.categoria}</td>
-            <td>${gasto.descricao}</td>
-            <td>€ ${gasto.valor.toFixed(2)}</td>
-            <td>
-                <button
-                    class="apagar"
-                    onclick="apagarGasto(${index})">
-                    X
-                </button>
-            </td>
-        </tr>
-        `;
-            });
-
-            document.getElementById("totalGeral")
-                .textContent = totalGeral.toFixed(2);
-
-            let resumoHTML = "";
-
-            for (const categoria in categorias) {
-
-                resumoHTML += `
-        <p>
-            <strong>${categoria}</strong>:
-            € ${categorias[categoria].toFixed(2)}
-        </p>
-        `;
-            }
-
-            document.getElementById("resumoCategorias")
-                .innerHTML = resumoHTML;
-
-            let detalheHTML = "";
-
-            for (const categoria in categorias) {
-
-                detalheHTML += `
-        <div class="categoria-box">
-
-            <h3>${categoria}</h3>
-
-            <p class="categoria-total">
-                Total: € ${categorias[categoria].toFixed(2)}
-            </p>
-
-            <ul>
-        `;
-
-                gastos
-                    .filter(g => g.categoria === categoria)
-                    .forEach(g => {
-
-                        detalheHTML += `
-            <li>
-                ${g.data} —
-                ${g.descricao}
-                (€ ${g.valor.toFixed(2)})
-            </li>
-            `;
-                    });
-
-                detalheHTML += `
-            </ul>
-
-        </div>
-        `;
-            }
-
-            document.getElementById("detalheCategorias")
-                .innerHTML = detalheHTML;
-        }
-
-        atualizarTabela();
     </script>
 
 </body>
 
 </html>
-```

@@ -106,7 +106,7 @@ function adicionarMovimento() {
 
     dados.movimentos.push({
 
-        id: Date.now(),
+        id: Data.now(),
 
         tipo,
 
@@ -1035,7 +1035,7 @@ function definirDataDivida() {
     if (!campo) return;
 
     const hoje =
-        new Date()
+        new data()
         .toISOString()
         .split("T")[0];
 
@@ -1145,7 +1145,7 @@ async function registarDivida() {
                     descricao: descricao,
                     valor: valorTotal,
                     pagador_id: pagadorId,
-                    date: data
+                    data: data
                 }
             ])
             .select()

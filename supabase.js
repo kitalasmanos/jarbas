@@ -14,15 +14,15 @@ async function carregarPessoas() {
             .select("*")
             .order("nome");
 
-    if (error) {
+if (error) {
 
-        console.error(error);
+    console.error(error);
 
-        alert(
-            "Erro ao carregar pessoas"
-        );
+    alert(
+        "ERRO: " + error.message
+    );
 
-        return;
+    return;
     }
 
     console.log(

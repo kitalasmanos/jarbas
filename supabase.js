@@ -9,37 +9,3 @@ const supabaseClient =
         SUPABASE_URL,
         SUPABASE_KEY
     );
-
-async function testeSupabase() {
-
-    const resultado =
-        await supabaseClient
-            .from("pessoas")
-            .select("*");
-
-    if (resultado.error) {
-
-        alert(
-            "ERRO:\n\n" +
-            resultado.error.message
-        );
-
-        console.error(
-            resultado.error
-        );
-
-        return;
-    }
-
-    alert(
-        "FUNCIONOU!\n\n" +
-        "Pessoas encontradas: " +
-        resultado.data.length
-    );
-
-    console.log(
-        resultado.data
-    );
-}
-
-testeSupabase();

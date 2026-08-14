@@ -1,39 +1,25 @@
 const SUPABASE_URL = "https://unoynpwkpvmyzdoyyvov.supabase.co";
-
-const SUPABASE_KEY = "sb_publishable_gH615f9gg0kVHqVTfcKDdw_NRPhHG0I";
+const SUPABASE_KEY = "A_TUA_CHAVE";
 
 const supabaseClient = supabase.createClient(
     SUPABASE_URL,
     SUPABASE_KEY
 );
 
-async function testarSupabase() {
+alert("Script carregado");
 
-    const { data, error } =
+async function testar() {
+
+    alert("A testar Supabase");
+
+    const resultado =
         await supabaseClient
-        .from("pessoas")
-        .insert([
-            {
-                nome: "Pessoa A"
-            }
-        ])
-        .select();
-
-    if (error) {
-
-        alert(
-            "Erro: " +
-            error.message
-        );
-
-        return;
-    }
+            .from("pessoas")
+            .select("*");
 
     alert(
-        "Pessoa criada com sucesso!"
+        JSON.stringify(resultado)
     );
-
-    console.log(data);
 }
 
-testarSupabase();
+testar();

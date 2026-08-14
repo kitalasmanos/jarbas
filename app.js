@@ -1035,7 +1035,7 @@ function definirDataDivida() {
     if (!campo) return;
 
     const hoje =
-        new date()
+        new Date()
         .toISOString()
         .split("T")[0];
 

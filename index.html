@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controlo de Gastos</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            margin: 0;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, .1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .formulario {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input,
+        select,
+        button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        
+        button {
+            cursor: pointer;
+            border: none;
+            font-weight: bold;
+        }
+        
+        .btn-add {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-print {
+            background: #007bff;
+            color: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+        }
+        
+        th {
+            background: #343a40;
+            color: white;
+        }
+        
+        .resumo {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .resumo h2 {
+            margin-top: 0;
+        }
+        
+        .total {
+            font-size: 22px;
+            color: #28a745;
+            font-weight: bold;
+        }
+        
+        .apagar {
+            background: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 5px;
+        }
+        
+        @media print {
+            .formulario,
+            .btn-print,
+            .apagar {
+                display: none;
+            }
+            body {
+                background: white;
+            }
+            .container {
+                box-shadow: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>💰 Controlo de Gastos Mensais</h1>
+
+        <div class="formulario">
+            <input type="date" id="data">
+
+            <select id="categoria">
+    <option>Supermercado</option>
+    <option>Gasolina</option>
+    <option>Portagens</option>
+    <option>Comer Fora</option>
+    <option>Água</option>
+    <option>Luz</option>
+    <option>Gás</option>
+    <option>Outros</option>
+</select>
+
+            <input type="text" id="descricao" placeholder="Descrição">
+
+            <input type="number" id="valor" step="0.01" placeholder="Valor (€)">
+
+            <button class="btn-add" onclick="adicionarGasto()">
+            Adicionar
+        </button>
+        </div>
+
+        <button class="btn-print" onclick="window.print()">
+        🖨️ Imprimir Relatório
+    </button>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Categoria</th>
+                    <th>Descrição</th>
+                    <th>Valor (€)</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+            <tbody id="tabelaGastos"></tbody>
+        </table>
+
+        <div class="resumo">
+            <h2>Resumo Mensal</h2>
+
+            <div id="resumoCategorias"></div>
+
+            <p class="total">
+                Total Geral: € <span id="totalGeral">0.00</span>
+            </p>
+        </div>
+
+    </div>
+
+    <script>
+        let gastos = JSON.parse(localStorage.getItem("gastos")) || [];
+
+        document.getElementById("data").value =
+            new Date().toISOString().split("T")[0];
+
+        function adicionarGasto() {
+
+            const data = document.getElementById("data").value;
+            const categoria = document.getElementById("categoria").value;
+            const descricao = document.getElementById("descricao").value;
+            const valor = parseFloat(document.getElementById("valor").value);
+
+            if (!descricao || isNaN(valor)) {
+                alert("Preencha a descrição e o valor.");
+                return;
+            }
+
+            gastos.push({
+                data,
+                categoria,
+                descricao,
+                valor
+            });
+
+            guardar();
+            atualizarTabela();
+
+            document.getElementById("descricao").value = "";
+            document.getElementById("valor").value = "";
+        }
+
+        function apagarGasto(index) {
+
+            if (confirm("Deseja apagar este registo?")) {
+                gastos.splice(index, 1);
+                guardar();
+                atualizarTabela();
+            }
+        }
+
+        function guardar() {
+            localStorage.setItem(
+                "gastos",
+                JSON.stringify(gastos)
+            );
+        }
+
+        function atualizarTabela() {
+
+            const tabela =
+                document.getElementById("tabelaGastos");
+
+            tabela.innerHTML = "";
+
+            let totalGeral = 0;
+
+            const categorias = {};
+
+            gastos.forEach((gasto, index) => {
+
+                totalGeral += gasto.valor;
+
+                categorias[gasto.categoria] =
+                    (categorias[gasto.categoria] || 0) +
+                    gasto.valor;
+
+                tabela.innerHTML += `
+        <tr>
+            <td>${gasto.data}</td>
+            <td>${gasto.categoria}</td>
+            <td>${gasto.descricao}</td>
+            <td>${gasto.valor.toFixed(2)}</td>
+            <td>
+                <button class="apagar"
+                onclick="apagarGasto(${index})">
+                X
+                </button>
+            </td>
+        </tr>
+        `;
+            });
+
+            document.getElementById("totalGeral")
+                .textContent = totalGeral.toFixed(2);
+
+            let resumoHTML = "";
+
+            for (const categoria in categorias) {
+                resumoHTML += `
+        <p>
+            <strong>${categoria}</strong>:
+            € ${categorias[categoria].toFixed(2)}
+        </p>
+        `;
+            }
+
+            document.getElementById("resumoCategorias")
+                .innerHTML = resumoHTML;
+        }
+
+        atualizarTabela();
+    </script>
+
+</body>
+
+</html>
+```

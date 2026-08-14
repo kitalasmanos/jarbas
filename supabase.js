@@ -1,40 +1,45 @@
-const SUPABASE_URL = "https://unoynpwkpvmyzdoywyov.supabase.co";
-const SUPABASE_KEY = "sb_publishable_gH615f9gg0kVHqVTfcKDdw_NRPhHG0I";
+const SUPABASE_URL =
+    "https://unoynpwkpvmyzdoywyov.supabase.co";
 
-const supabaseClient = supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_KEY
-);
+const SUPABASE_KEY =
+    "sb_publishable_gH615f9gg0kVHqVTfcKDdw_NRPhHG0I";
 
-async function carregarPessoas() {
+const supabaseClient =
+    supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
 
-    const { data, error } =
+async function testeSupabase() {
+
+    const resultado =
         await supabaseClient
             .from("pessoas")
-            .select("*")
-            .order("nome");
+            .select("*");
 
-if (error) {
+    if (resultado.error) {
 
-    console.error(error);
+        alert(
+            "ERRO:\n\n" +
+            resultado.error.message
+        );
 
-    alert(
-        "ERRO: " + error.message
-    );
+        console.error(
+            resultado.error
+        );
 
-    return;
+        return;
     }
 
-    console.log(
-        "Pessoas:",
-        data
+    alert(
+        "FUNCIONOU!\n\n" +
+        "Pessoas encontradas: " +
+        resultado.data.length
     );
 
-    alert(
-        "Encontradas " +
-        data.length +
-        " pessoas"
+    console.log(
+        resultado.data
     );
 }
 
-carregarPessoas();
+testeSupabase();

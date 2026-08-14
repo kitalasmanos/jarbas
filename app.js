@@ -935,3 +935,133 @@ function atualizarGrafico(
     );
 
 }
+
+/* =====================================
+   PESSOAS - SUPABASE
+===================================== */
+
+async function carregarPessoasDividas() {
+
+    const { data, error } =
+        await supabaseClient
+            .from("pessoas")
+            .select("id, nome")
+            .order("nome");
+
+    if (error) {
+
+        console.error(
+            "Erro ao carregar pessoas:",
+            error
+        );
+
+        alert(
+            "Erro ao carregar pessoas: " +
+            error.message
+        );
+
+        return;
+    }
+
+    const pagador =
+        document.getElementById(
+            "pagadorDivida"
+        );
+
+    const devedor =
+        document.getElementById(
+            "devedorDivida"
+        );
+
+    if (!pagador || !devedor) {
+        return;
+    }
+
+    pagador.innerHTML =
+        '<option value="">Selecionar pessoa</option>';
+
+    devedor.innerHTML =
+        '<option value="">Selecionar pessoa</option>';
+
+    data.forEach(pessoa => {
+
+        const optionPagador =
+            document.createElement(
+                "option"
+            );
+
+        optionPagador.value =
+            pessoa.id;
+
+        optionPagador.textContent =
+            pessoa.nome;
+
+        pagador.appendChild(
+            optionPagador
+        );
+
+
+        const optionDevedor =
+            document.createElement(
+                "option"
+            );
+
+        optionDevedor.value =
+            pessoa.id;
+
+        optionDevedor.textContent =
+            pessoa.nome;
+
+        devedor.appendChild(
+            optionDevedor
+        );
+
+    });
+
+}
+
+
+/* =====================================
+   DATA DA DÍVIDA
+===================================== */
+
+function definirDataDivida() {
+
+    const campo =
+        document.getElementById(
+            "dataDivida"
+        );
+
+    if (!campo) return;
+
+    const hoje =
+        new Date()
+        .toISOString()
+        .split("T")[0];
+
+    campo.value = hoje;
+
+}
+
+
+/* =====================================
+   INICIALIZAR SISTEMA DE DÍVIDAS
+===================================== */
+
+async function iniciarSistemaDividas() {
+
+    definirDataDivida();
+
+    await carregarPessoasDividas();
+
+}
+
+
+/* =====================================
+   INICIAR QUANDO A PÁGINA CARREGAR
+===================================== */
+
+document.addEventListener(
+    "DOMContentLoaded",
+    iniciarSistemaDividas
+);

@@ -47,7 +47,7 @@ function euro(valor) {
 function definirDataHoje() {
 
     const hoje =
-        new Data()
+        new Date()
         .toISOString()
         .split("T")[0];
 

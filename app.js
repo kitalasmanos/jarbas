@@ -1221,45 +1221,25 @@ async function registarDivida() {
 async function carregarDividas() {
 
     const {
-        data,
+        data: dividas,
         error
-    } =
-        await supabaseClient
-            .from("dividas")
-            .select(`
-                id,
-                valor,
-                liquidado,
-                devedor_id,
-                credor_id,
-                pessoas_devedor:pessoas!dividas_devedor_id_fkey (
-                    nome
-                ),
-                pessoas_credor:pessoas!dividas_credor_id_fkey (
-                    nome
-                ),
-                despesas_partilhadas (
-                    descricao,
-                    valor,
-                    date
-                )
-            `)
-            .eq("liquidado", false)
-            .order("id", {
-                ascending: false
-            });
+    } = await supabaseClient
+        .from("dividas")
+        .select("id, valor, liquidado, devedor_id, credor_id, despesa_id")
+        .eq("liquidado", false)
+        .order("id", {
+            ascending: false
+        });
 
     if (error) {
 
-        console.error(
-            "Erro ao carregar dívidas:",
-            error
-        );
+        console.error(error);
 
         document.getElementById(
             "listaDividas"
         ).innerHTML =
-            "Erro ao carregar dívidas.";
+            "Erro ao carregar dívidas: " +
+            error.message;
 
         return;
     }
@@ -1269,7 +1249,9 @@ async function carregarDividas() {
             "listaDividas"
         );
 
-    if (!data || data.length === 0) {
+    container.innerHTML = "";
+
+    if (!dividas || dividas.length === 0) {
 
         container.innerHTML =
             "Não existem dívidas pendentes.";
@@ -1277,42 +1259,49 @@ async function carregarDividas() {
         return;
     }
 
-    container.innerHTML = "";
+    for (const divida of dividas) {
 
-    data.forEach(divida => {
+        const { data: devedor } =
+            await supabaseClient
+                .from("pessoas")
+                .select("nome")
+                .eq("id", divida.devedor_id)
+                .single();
+
+        const { data: credor } =
+            await supabaseClient
+                .from("pessoas")
+                .select("nome")
+                .eq("id", divida.credor_id)
+                .single();
+
+        const { data: despesa } =
+            await supabaseClient
+                .from("despesas_partilhadas")
+                .select("descricao, valor, data")
+                .eq("id", divida.despesa_id)
+                .single();
 
         const div =
-            document.createElement(
-                "div"
-            );
+            document.createElement("div");
 
-        div.className =
-            "resumo-item";
-
-        const devedor =
-            divida.pessoas_devedor?.nome ||
-            "Desconhecido";
-
-        const credor =
-            divida.pessoas_credor?.nome ||
-            "Desconhecido";
-
-        const descricao =
-            divida.despesas_partilhadas
-                ?.descricao ||
-            "Despesa";
+        div.className = "resumo-item";
 
         div.innerHTML = `
             <strong>
-                ${devedor} deve
+                ${devedor?.nome || "Desconhecido"}
+                deve
                 ${euro(divida.valor)}
-                a ${credor}
+                a
+                ${credor?.nome || "Desconhecido"}
             </strong>
 
             <br>
 
             <small>
-                ${descricao}
+                ${despesa?.descricao || "Despesa"}
+                -
+                ${despesa?.data || ""}
             </small>
 
             <br>
@@ -1324,11 +1313,8 @@ async function carregarDividas() {
         `;
 
         container.appendChild(div);
-
-    });
-
+    }
 }
-
 /* =====================================
    LIQUIDAR DÍVIDA
 ===================================== */

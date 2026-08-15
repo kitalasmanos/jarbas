@@ -1230,127 +1230,23 @@ async function registarDivida() {
 
 async function carregarSaldos() {
 
-    const container =
-        document.getElementById(
-            "listaDividas"
-        );
+    alert("ENTREI EM CARREGAR SALDOS");
 
-   const resultado =
-    await supabaseClient
-        .from("dividas")
-        .select(
-            "id, valor, liquidado, devedor_id, credor_id"
-        )
-        .eq(
-            "liquidado",
-            false
-        );
-
-if (resultado.error) {
-
-    alert(
-        "ERRO AO LER DÍVIDAS:\n\n" +
-        resultado.error.message
-    );
-
-    console.error(
-        resultado.error
-    );
-
-    return;
-}
-
-alert(
-    "DÍVIDAS ENCONTRADAS: " +
-    resultado.data.length
-);
-
-console.log(
-    resultado.data
-);
-
-    if (!container) {
-        return;
-    }
-
-    container.innerHTML =
-        "A carregar saldos...";
-
-
-    const {
-        data: dividas,
-        error
-    } =
+    const resultado =
         await supabaseClient
             .from("dividas")
-            .select(
-                "id, valor, liquidado, devedor_id, credor_id"
-            )
-            .eq(
-                "liquidado",
-                false
-            );
+            .select("*");
 
-    if (error) {
-
-        console.error(
-            "Erro ao carregar saldos:",
-            error
-        );
-
-        container.innerHTML =
-            "Erro ao carregar saldos: " +
-            error.message;
-
-        return;
-    }
-
-
-    if (
-        !dividas ||
-        dividas.length === 0
-    ) {
-
-        container.innerHTML =
-            "Não existem saldos pendentes.";
-
-        return;
-    }
-
-
-    const {
-        data: pessoas,
-        error: erroPessoas
-    } =
-        await supabaseClient
-            .from("pessoas")
-            .select("id, nome");
-
-    if (erroPessoas) {
-
-        console.error(
-            erroPessoas
-        );
-
-        container.innerHTML =
-            "Erro ao carregar pessoas.";
-
-        return;
-    }
-
-
-    const nomes = {};
-
-    pessoas.forEach(
-        pessoa => {
-
-            nomes[pessoa.id] =
-                pessoa.nome;
-
-        }
+    alert(
+        "RESPOSTA DO SUPABASE:\n\n" +
+        JSON.stringify(
+            resultado,
+            null,
+            2
+        )
     );
 
-
+}
     /* =================================
        SALDOS LÍQUIDOS
     ================================= */

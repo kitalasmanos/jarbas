@@ -1,200 +1,158 @@
+```html
 <!DOCTYPE html>
-<html lang="pt">
-
+<html lang="pt-PT">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Gestor Financeiro</title>
 
-    <meta name="theme-color" content="#16a34a">
+    <meta
+        name="theme-color"
+        content="#16a34a"
+    >
 
-    <link rel="manifest" href="manifest.json">
-    <link rel="stylesheet" href="style.css">
+    <link
+        rel="manifest"
+        href="manifest.json"
+    >
+
+    <link
+        rel="stylesheet"
+        href="style.css"
+    >
 </head>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <body>
 
-    <header class="header">
+<header class="header">
+    <div class="header-content">
         <h1>💰 Gestor Financeiro</h1>
-        <p>Receitas • Despesas • Orçamento • Estatísticas</p>
-    </header>
-
-    <main class="container">
-
-        <!-- DASHBOARD -->
-
-        <!-- QUEM DEVE A QUEM -->
-
-<section class="card">
-
-    <h2>👥 Quem Deve a Quem</h2>
-
-    <div class="form-grid">
-
-        <div>
-            <label>Quem pagou?</label>
-            <select id="pagadorDivida"></select>
-        </div>
-
-        <div>
-            <label>Quem deve?</label>
-            <select id="devedorDivida"></select>
-        </div>
-
-        <div>
-            <label>Descrição</label>
-            <input
-                type="text"
-                id="descricaoDivida"
-                placeholder="Ex.: Água">
-        </div>
-
-        <div>
-            <label>Valor total pago (€)</label>
-            <input
-                type="number"
-                id="valorTotalDivida"
-                step="0.01"
-                placeholder="50.00">
-        </div>
-
-        <div>
-            <label>Valor que deve (€)</label>
-            <input
-                type="number"
-                id="valorDevido"
-                step="0.01"
-                placeholder="25.00">
-        </div>
-
-        <div>
-            <label>Data</label>
-            <input
-                type="date"
-                id="dataDivida">
-        </div>
-
-        <div>
-            <button onclick="registarDivida()">
-                Registar Dívida
-            </button>
-        </div>
-
+        <p>Receitas · Despesas · Orçamento · Dívidas</p>
     </div>
+</header>
 
-  
-</section>
 
-<section class="card">
+<main class="container">
 
-    <h2>💸 Saldos</h2>
 
-    <div id="listaDividas">
-        Ainda não existem dívidas registadas.
-    </div>
+    <!-- =========================================
+         DASHBOARD
+    ========================================== -->
 
-</section>
+    <section class="card">
 
-        <section class="card">
+        <h2>📊 Resumo</h2>
 
-            <h2>📊 Dashboard</h2>
+        <div class="dashboard">
 
-            <div class="dashboard">
-
-                <div class="stat-card saldo">
-                    <h3>Saldo Atual</h3>
-                    <p id="saldoAtual">€ 0.00</p>
-                </div>
-
-                <div class="stat-card receita">
-                    <h3>Receitas</h3>
-                    <p id="totalReceitas">€ 0.00</p>
-                </div>
-
-                <div class="stat-card despesa">
-                    <h3>Despesas</h3>
-                    <p id="totalDespesas">€ 0.00</p>
-                </div>
-
-                <div class="stat-card orcamento">
-                    <h3>Orçamento Restante</h3>
-                    <p id="orcamentoRestante">€ 0.00</p>
-                </div>
-
+            <div class="stat-card saldo">
+                <span>Saldo</span>
+                <strong id="saldoAtual">0,00 €</strong>
             </div>
 
-        </section>
+            <div class="stat-card receita">
+                <span>Receitas</span>
+                <strong id="totalReceitas">0,00 €</strong>
+            </div>
 
-        <!-- ORÇAMENTO -->
+            <div class="stat-card despesa">
+                <span>Despesas</span>
+                <strong id="totalDespesas">0,00 €</strong>
+            </div>
 
-        <section class="card">
+            <div class="stat-card orcamento">
+                <span>Orçamento restante</span>
+                <strong id="orcamentoRestante">0,00 €</strong>
+            </div>
 
-            <h2>🎯 Orçamento Mensal</h2>
+        </div>
 
-            <div class="form-grid">
+    </section>
 
-                <div>
-                    <label>Orçamento (€)</label>
-                    <input type="number" id="orcamentoMensal" step="0.01" placeholder="1000">
-                </div>
 
-                <div>
-                    <button onclick="guardarOrcamento()">
+    <!-- =========================================
+         ORÇAMENTO
+    ========================================== -->
+
+    <section class="card">
+
+        <h2>🎯 Orçamento Mensal</h2>
+
+        <div class="form-grid">
+
+            <div>
+                <label for="orcamentoMensal">
+                    Orçamento (€)
+                </label>
+
+                <input
+                    type="number"
+                    id="orcamentoMensal"
+                    min="0"
+                    step="0.01"
+                    placeholder="1000.00"
+                >
+            </div>
+
+            <div class="form-button">
+                <button
+                    type="button"
+                    onclick="guardarOrcamento()"
+                >
                     Guardar Orçamento
                 </button>
-                </div>
-
             </div>
 
-            <div class="progress-container">
-                <div id="progressBar"></div>
-            </div>
+        </div>
 
-            <p id="percentagemOrcamento">
-                0% utilizado
-            </p>
+        <div class="progress-container">
+            <div id="progressBar"></div>
+        </div>
 
-        </section>
+        <p id="percentagemOrcamento">
+            Sem orçamento definido
+        </p>
 
-        <!-- NOVO MOVIMENTO -->
+    </section>
 
-        <section class="card">
 
-            <h2>➕ Novo Movimento</h2>
+    <!-- =========================================
+         NOVO MOVIMENTO
+    ========================================== -->
 
-            <div class="form-grid">
+    <section class="card">
 
-                <div>
-                    <label>Tipo</label>
+        <h2>➕ Novo Movimento</h2>
 
-                    <select id="tipo">
+        <div class="form-grid">
 
-                    <option value="receita">
-                        Receita
-                    </option>
+            <div>
+                <label for="tipo">
+                    Tipo
+                </label>
 
+                <select id="tipo">
                     <option value="despesa">
                         Despesa
                     </option>
 
+                    <option value="receita">
+                        Receita
+                    </option>
                 </select>
-                </div>
+            </div>
 
-                <div>
 
-                    <label>Categoria</label>
+            <div>
+                <label for="categoria">
+                    Categoria
+                </label>
 
-                    <select id="categoria">
-
-                    <optgroup label="Receitas">
-                        <option>Salário</option>
-                        <option>Prémios</option>
-                        <option>Reembolsos</option>
-                        <option>Outros</option>
-                    </optgroup>
+                <select id="categoria">
 
                     <optgroup label="Despesas">
+
                         <option>Supermercado</option>
                         <option>Gasolina</option>
                         <option>Portagens</option>
@@ -207,186 +165,423 @@
                         <option>Saúde</option>
                         <option>Lazer</option>
                         <option>Outros</option>
+
+                    </optgroup>
+
+                    <optgroup label="Receitas">
+
+                        <option>Salário</option>
+                        <option>Prémios</option>
+                        <option>Reembolsos</option>
+
                     </optgroup>
 
                 </select>
-
-                </div>
-
-                <div>
-                    <label>Descrição</label>
-
-                    <input type="text" id="descricao" placeholder="Descrição">
-                </div>
-
-                <div>
-                    <label>Valor (€)</label>
-
-                    <input type="number" id="valor" step="0.01" placeholder="0.00">
-                </div>
-
-                <div>
-                    <label>Data</label>
-
-                    <input type="date" id="dataMovimento">
-                </div>
-
-                <div>
-                    <button onclick="adicionarMovimento()">
-                    Adicionar
-                </button>
-                </div>
-
             </div>
 
-        </section>
 
-        <!-- PESQUISA -->
+            <div>
+                <label for="descricao">
+                    Descrição
+                </label>
 
-        <section class="card">
+                <input
+                    type="text"
+                    id="descricao"
+                    placeholder="Ex.: Supermercado"
+                >
+            </div>
 
-            <h2>🔍 Pesquisa e Filtros</h2>
 
-            <div class="form-grid">
+            <div>
+                <label for="valor">
+                    Valor (€)
+                </label>
 
-                <div>
-                    <label>Pesquisar</label>
+                <input
+                    type="number"
+                    id="valor"
+                    min="0"
+                    step="0.01"
+                    placeholder="0.00"
+                >
+            </div>
 
-                    <input type="text" id="pesquisa" placeholder="Descrição..." onkeyup="filtrarMovimentos()">
-                </div>
 
-                <div>
-                    <label>Categoria</label>
+            <div>
+                <label for="dataMovimento">
+                    Data
+                </label>
 
-                    <select id="filtroCategoria" onchange="filtrarMovimentos()">
+                <input
+                    type="date"
+                    id="dataMovimento"
+                >
+            </div>
 
+
+            <div class="form-button">
+                <button
+                    type="button"
+                    onclick="adicionarMovimento()"
+                >
+                    Adicionar Movimento
+                </button>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         PESQUISA E FILTROS
+    ========================================== -->
+
+    <section class="card">
+
+        <h2>🔍 Pesquisa</h2>
+
+        <div class="form-grid">
+
+            <div>
+                <label for="pesquisa">
+                    Descrição
+                </label>
+
+                <input
+                    type="text"
+                    id="pesquisa"
+                    placeholder="Pesquisar..."
+                >
+            </div>
+
+
+            <div>
+                <label for="filtroCategoria">
+                    Categoria
+                </label>
+
+                <select id="filtroCategoria">
                     <option value="">
                         Todas
                     </option>
-
                 </select>
-                </div>
-
             </div>
 
-        </section>
 
-        <!-- HISTÓRICO -->
+            <div>
+                <label for="filtroMes">
+                    Mês
+                </label>
 
-        <section class="card">
-
-            <h2>📅 Histórico de Movimentos</h2>
-
-            <div class="table-responsive">
-
-                <table>
-
-                    <thead>
-                        <tr>
-                            <th>Data</th>
-                            <th>Tipo</th>
-                            <th>Categoria</th>
-                            <th>Descrição</th>
-                            <th>Valor</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="tabelaMovimentos">
-
-                    </tbody>
-
-                </table>
-
+                <input
+                    type="month"
+                    id="filtroMes"
+                >
             </div>
 
-        </section>
 
-        <!-- RESUMO -->
-
-        <section class="card">
-
-            <h2>📊 Resumo por Categoria</h2>
-
-            <div id="resumoCategorias">
-
+            <div class="form-button">
+                <button
+                    type="button"
+                    onclick="limparFiltros()"
+                >
+                    Limpar Filtros
+                </button>
             </div>
 
-        </section>
+        </div>
 
-        <section class="card">
+    </section>
 
-            <h2>📈 Estatísticas</h2>
 
-            <div class="form-grid">
+    <!-- =========================================
+         HISTÓRICO
+    ========================================== -->
 
-                <div>
-                    <label>Mês</label>
+    <section class="card">
 
-                    <input type="month" id="filtroMes" onchange="aplicarFiltroMes()">
-                </div>
+        <h2>📅 Histórico de Movimentos</h2>
 
+        <div class="table-container">
+
+            <table>
+
+                <thead>
+                    <tr>
+                        <th>Data</th>
+                        <th>Tipo</th>
+                        <th>Categoria</th>
+                        <th>Descrição</th>
+                        <th>Valor</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+
+                <tbody id="tabelaMovimentos">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         ESTATÍSTICAS
+    ========================================== -->
+
+    <section class="card">
+
+        <h2>📈 Estatísticas</h2>
+
+        <div class="chart-container">
+            <canvas id="graficoCategorias"></canvas>
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         RESUMO POR CATEGORIA
+    ========================================== -->
+
+    <section class="card">
+
+        <h2>📂 Gastos por Categoria</h2>
+
+        <div id="resumoCategorias">
+            Sem despesas registadas.
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         QUEM DEVE A QUEM
+    ========================================== -->
+
+    <section class="card">
+
+        <h2>👥 Quem Deve a Quem</h2>
+
+        <p class="section-help">
+            Regista uma despesa partilhada quando uma pessoa
+            paga e outra pessoa fica a dever uma parte.
+        </p>
+
+
+        <div class="form-grid">
+
+            <div>
+                <label for="pagadorDivida">
+                    Quem pagou?
+                </label>
+
+                <select id="pagadorDivida">
+                    <option value="">
+                        A carregar pessoas...
+                    </option>
+                </select>
             </div>
 
-            <canvas id="graficoCategorias" height="120">
-    </canvas>
 
-        </section>
+            <div>
+                <label for="devedorDivida">
+                    Quem deve?
+                </label>
 
-        <!-- DADOS -->
+                <select id="devedorDivida">
+                    <option value="">
+                        A carregar pessoas...
+                    </option>
+                </select>
+            </div>
 
-        <section class="card">
 
-            <h2>💾 Dados</h2>
+            <div>
+                <label for="descricaoDivida">
+                    Descrição
+                </label>
 
-            <div class="actions">
+                <input
+                    type="text"
+                    id="descricaoDivida"
+                    placeholder="Ex.: Água"
+                >
+            </div>
 
-                <button onclick="exportarJSON()">
+
+            <div>
+                <label for="valorTotalDivida">
+                    Valor total pago (€)
+                </label>
+
+                <input
+                    type="number"
+                    id="valorTotalDivida"
+                    min="0"
+                    step="0.01"
+                    placeholder="50.00"
+                >
+            </div>
+
+
+            <div>
+                <label for="valorDevido">
+                    Valor que deve (€)
+                </label>
+
+                <input
+                    type="number"
+                    id="valorDevido"
+                    min="0"
+                    step="0.01"
+                    placeholder="25.00"
+                >
+            </div>
+
+
+            <div>
+                <label for="dataDivida">
+                    Data
+                </label>
+
+                <input
+                    type="date"
+                    id="dataDivida"
+                >
+            </div>
+
+
+            <div class="form-button">
+                <button
+                    type="button"
+                    onclick="registarDivida()"
+                >
+                    Registar Dívida
+                </button>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         SALDOS ENTRE PESSOAS
+    ========================================== -->
+
+    <section class="card">
+
+        <h2>💸 Saldos</h2>
+
+        <div id="listaDividas">
+            A carregar saldos...
+        </div>
+
+    </section>
+
+
+    <!-- =========================================
+         BACKUP
+    ========================================== -->
+
+    <section class="card">
+
+        <h2>💾 Dados e Backup</h2>
+
+        <div class="actions">
+
+            <button
+                type="button"
+                onclick="exportarJSON()"
+            >
                 Exportar JSON
             </button>
 
-                <button onclick="exportarCSV()">
+            <button
+                type="button"
+                onclick="exportarCSV()"
+            >
                 Exportar CSV
             </button>
 
-                <button onclick="window.print()">
+            <button
+                type="button"
+                onclick="window.print()"
+            >
                 Imprimir
             </button>
 
-            </div>
+        </div>
 
-            <br>
 
-            <input type="file" id="importFile" accept=".json">
+        <div class="import-area">
 
-            <button onclick="importarJSON()">
-            Importar Backup
-        </button>
+            <label for="importFile">
+                Importar backup JSON
+            </label>
 
-        </section>
+            <input
+                type="file"
+                id="importFile"
+                accept=".json"
+            >
 
-    </main>
+            <button
+                type="button"
+                onclick="importarJSON()"
+            >
+                Importar Backup
+            </button>
 
-    <footer>
+        </div>
 
-        <p>
-            Gestor Financeiro © 2026
-        </p>
+    </section>
 
-    </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</main>
+
+
+<footer class="footer">
+
+    <p>
+        Gestor Financeiro © 2026
+    </p>
+
+</footer>
+
+
+<!-- =========================================
+     SUPABASE
+========================================== -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="supabase.js"></script>
+
 <script src="app.js"></script>
 
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register(
-                'service-worker.js'
+<script>
+    if ("serviceWorker" in navigator) {
+
+        navigator.serviceWorker.register(
+            "service-worker.js"
+        ).catch(error => {
+
+            console.error(
+                "Erro ao registar Service Worker:",
+                error
             );
-        }
-    </script>
+
+        });
+
+    }
+</script>
 
 </body>
-
 </html>
+```

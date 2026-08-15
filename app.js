@@ -1,7 +1,6 @@
 /* =====================================
    GESTOR FINANCEIRO 2.0
 ===================================== */
-alert("TESTE APP.JS");
 
 const STORAGE_KEY = "gestor-financeiro-v2";
 

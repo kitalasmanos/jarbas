@@ -4,7 +4,6 @@
 alert("TESTE APP.JS");
 
 const STORAGE_KEY = "gestor-financeiro-v2";
-const STORAGE_KEY = "gestor-financeiro-v2";
 
 let dados = JSON.parse(
     localStorage.getItem(STORAGE_KEY)

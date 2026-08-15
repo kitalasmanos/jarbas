@@ -1,4 +1,4 @@
-const CACHE_NAME = "gestor-financeiro-v9";
+const CACHE_NAME = "gestor-financeiro-v12";
 
 const FILES = [
     "./",

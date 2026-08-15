@@ -1243,6 +1243,154 @@ async function carregarSaldos() {
         }
     );
 
+   async function registarPagamento(
+    devedorId,
+    credorId,
+    dividaIds,
+    saldoAtual
+) {
+
+    const valorInput =
+        prompt(
+            `Quanto foi pago?\n\nSaldo atual: ${euro(saldoAtual)}`
+        );
+
+    if (
+        valorInput === null
+    ) {
+        return;
+    }
+
+    const valorPago =
+        Number(
+            valorInput.replace(",", ".")
+        );
+
+    if (
+        !Number.isFinite(valorPago) ||
+        valorPago <= 0
+    ) {
+
+        alert(
+            "Introduza um valor válido."
+        );
+
+        return;
+    }
+
+    if (
+        valorPago > saldoAtual
+    ) {
+
+        alert(
+            "O pagamento não pode ser superior ao saldo atual."
+        );
+
+        return;
+    }
+
+    let restantePagamento =
+        valorPago;
+
+    for (
+        const dividaId of dividaIds
+    ) {
+
+        if (
+            restantePagamento <= 0
+        ) {
+            break;
+        }
+
+        const {
+            data: divida,
+            error
+        } =
+            await supabaseClient
+                .from("dividas")
+                .select(
+                    "id, valor, valor_pago"
+                )
+                .eq(
+                    "id",
+                    dividaId
+                )
+                .single();
+
+        if (error) {
+
+            alert(
+                "Erro ao ler a dívida:\n" +
+                error.message
+            );
+
+            return;
+        }
+
+        const valorOriginal =
+            Number(divida.valor);
+
+        const valorJaPago =
+            Number(
+                divida.valor_pago || 0
+            );
+
+        const valorEmFalta =
+            valorOriginal -
+            valorJaPago;
+
+        const pagamentoNestaDivida =
+            Math.min(
+                restantePagamento,
+                valorEmFalta
+            );
+
+        const novoValorPago =
+            valorJaPago +
+            pagamentoNestaDivida;
+
+        const liquidado =
+            novoValorPago >=
+            valorOriginal;
+
+        const {
+            error: erroUpdate
+        } =
+            await supabaseClient
+                .from("dividas")
+                .update({
+                    valor_pago:
+                        novoValorPago,
+
+                    liquidado:
+                        liquidado
+                })
+                .eq(
+                    "id",
+                    dividaId
+                );
+
+        if (erroUpdate) {
+
+            alert(
+                "Erro ao registar pagamento:\n" +
+                erroUpdate.message
+            );
+
+            return;
+        }
+
+        restantePagamento -=
+            pagamentoNestaDivida;
+    }
+
+    alert(
+        `Pagamento de ${euro(valorPago)} registado.`
+    );
+
+    await carregarSaldos();
+}
+
 
     /* =================================
        CONSOLIDAR SALDOS

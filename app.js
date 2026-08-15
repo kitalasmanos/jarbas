@@ -1801,10 +1801,8 @@ async function iniciarAplicacao() {
         );
 
     if (orcamento) {
-
         orcamento.value =
             dados.orcamento || "";
-
     }
 
     configurarFiltros();

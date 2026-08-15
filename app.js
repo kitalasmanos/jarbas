@@ -1218,6 +1218,7 @@ async function registarDivida() {
    CARREGAR DÍVIDAS
 ===================================== */
 
+```javascript
 async function carregarDividas() {
 
     const {
@@ -1225,31 +1226,24 @@ async function carregarDividas() {
         error
     } = await supabaseClient
         .from("dividas")
-        .select("id, valor, liquidado, devedor_id, credor_id, despesa_id")
-        .eq("liquidado", false)
-        .order("id", {
-            ascending: false
-        });
+        .select(
+            "id, valor, liquidado, devedor_id, credor_id, despesa_id"
+        )
+        .eq("liquidado", false);
+
+    const container =
+        document.getElementById("listaDividas");
 
     if (error) {
 
         console.error(error);
 
-        document.getElementById(
-            "listaDividas"
-        ).innerHTML =
+        container.innerHTML =
             "Erro ao carregar dívidas: " +
             error.message;
 
         return;
     }
-
-    const container =
-        document.getElementById(
-            "listaDividas"
-        );
-
-    container.innerHTML = "";
 
     if (!dividas || dividas.length === 0) {
 
@@ -1259,62 +1253,154 @@ async function carregarDividas() {
         return;
     }
 
-    for (const divida of dividas) {
+    /* =====================================
+       CARREGAR NOMES DAS PESSOAS
+    ===================================== */
 
-        const { data: devedor } =
-            await supabaseClient
-                .from("pessoas")
-                .select("nome")
-                .eq("id", divida.devedor_id)
-                .single();
+    const { data: pessoas, error: erroPessoas } =
+        await supabaseClient
+            .from("pessoas")
+            .select("id, nome");
 
-        const { data: credor } =
-            await supabaseClient
-                .from("pessoas")
-                .select("nome")
-                .eq("id", divida.credor_id)
-                .single();
+    if (erroPessoas) {
 
-        const { data: despesa } =
-            await supabaseClient
-                .from("despesas_partilhadas")
-                .select("descricao, valor, data")
-                .eq("id", divida.despesa_id)
-                .single();
+        console.error(erroPessoas);
+
+        container.innerHTML =
+            "Erro ao carregar pessoas.";
+
+        return;
+    }
+
+    const nomes = {};
+
+    pessoas.forEach(pessoa => {
+        nomes[pessoa.id] = pessoa.nome;
+    });
+
+    /* =====================================
+       CALCULAR SALDO LÍQUIDO
+    ===================================== */
+
+    const saldos = {};
+
+    dividas.forEach(divida => {
+
+        const devedor = divida.devedor_id;
+        const credor = divida.credor_id;
+        const valor = Number(divida.valor);
+
+        /*
+         * Criamos uma chave única para o par
+         * de pessoas, independentemente da direção.
+         */
+
+        const ids = [
+            Number(devedor),
+            Number(credor)
+        ].sort((a, b) => a - b);
+
+        const chave =
+            ids[0] + "-" + ids[1];
+
+        if (!saldos[chave]) {
+
+            saldos[chave] = {
+                pessoaA: ids[0],
+                pessoaB: ids[1],
+                saldo: 0
+            };
+
+        }
+
+        /*
+         * Se pessoa A deve a B:
+         * saldo positivo = A deve a B
+         */
+
+        if (Number(devedor) === ids[0]) {
+
+            saldos[chave].saldo += valor;
+
+        } else {
+
+            saldos[chave].saldo -= valor;
+
+        }
+
+    });
+
+    /* =====================================
+       MOSTRAR RESULTADO
+    ===================================== */
+
+    container.innerHTML = "";
+
+    let encontrouSaldo = false;
+
+    Object.values(saldos).forEach(item => {
+
+        /*
+         * Se o saldo for positivo:
+         * pessoaA deve à pessoaB
+         *
+         * Se for negativo:
+         * pessoaB deve à pessoaA
+         */
+
+        let devedor;
+        let credor;
+        let valor;
+
+        if (item.saldo > 0) {
+
+            devedor = item.pessoaA;
+            credor = item.pessoaB;
+            valor = item.saldo;
+
+        } else if (item.saldo < 0) {
+
+            devedor = item.pessoaB;
+            credor = item.pessoaA;
+            valor = Math.abs(item.saldo);
+
+        } else {
+
+            return;
+        }
+
+        encontrouSaldo = true;
 
         const div =
             document.createElement("div");
 
-        div.className = "resumo-item";
+        div.className =
+            "resumo-item";
 
         div.innerHTML = `
             <strong>
-                ${devedor?.nome || "Desconhecido"}
+                ${nomes[devedor] || "Desconhecido"}
                 deve
-                ${euro(divida.valor)}
+                ${euro(valor)}
                 a
-                ${credor?.nome || "Desconhecido"}
+                ${nomes[credor] || "Desconhecido"}
             </strong>
-
-            <br>
-
-            <small>
-                ${despesa?.descricao || "Despesa"}
-                -
-                ${despesa?.data || ""}
-            </small>
-
-            <br>
-
-            <button
-                onclick="liquidarDivida(${divida.id})">
-                Marcar como paga
-            </button>
         `;
 
         container.appendChild(div);
+
+    });
+
+    if (!encontrouSaldo) {
+
+        container.innerHTML =
+            "Não existem saldos pendentes.";
+
     }
+
 }
+```
+
 /* =====================================
    LIQUIDAR DÍVIDA
 ===================================== */

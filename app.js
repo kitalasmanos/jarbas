@@ -1235,6 +1235,8 @@ async function carregarSaldos() {
             "listaDividas"
         );
 
+   alert("A carregar saldos...");
+
     if (!container) {
         return;
     }

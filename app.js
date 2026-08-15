@@ -1234,151 +1234,156 @@ async function carregarSaldos() {
         document.getElementById("listaDividas");
 
     if (!container) {
+        alert("ERRO: listaDividas não existe.");
         return;
     }
 
-    container.innerHTML =
-        "A carregar saldos...";
+    container.innerHTML = "Passo 1...";
 
-    const {
-        data: dividas,
-        error
-    } = await supabaseClient
-        .from("dividas")
-        .select(
-            "id, valor, liquidado, devedor_id, credor_id"
-        )
-        .eq(
-            "liquidado",
-            false
+    try {
+
+        const resultadoDividas =
+            await supabaseClient
+                .from("dividas")
+                .select(
+                    "id, valor, liquidado, devedor_id, credor_id"
+                )
+                .eq("liquidado", false);
+
+        if (resultadoDividas.error) {
+            throw new Error(
+                "DÍVIDAS: " +
+                resultadoDividas.error.message
+            );
+        }
+
+        container.innerHTML =
+            "Passo 2 — " +
+            resultadoDividas.data.length +
+            " dívidas encontradas...";
+
+        const resultadoPessoas =
+            await supabaseClient
+                .from("pessoas")
+                .select("id, nome");
+
+        if (resultadoPessoas.error) {
+            throw new Error(
+                "PESSOAS: " +
+                resultadoPessoas.error.message
+            );
+        }
+
+        container.innerHTML =
+            "Passo 3 — " +
+            resultadoPessoas.data.length +
+            " pessoas encontradas...";
+
+        const nomes = {};
+
+        resultadoPessoas.data.forEach(
+            pessoa => {
+                nomes[pessoa.id] =
+                    pessoa.nome;
+            }
         );
 
-    if (error) {
+        const pares = {};
 
-        console.error(error);
+        resultadoDividas.data.forEach(
+            divida => {
 
-        container.innerHTML =
-            "Erro ao carregar saldos: " +
-            error.message;
+                const devedor =
+                    Number(divida.devedor_id);
 
-        return;
-    }
+                const credor =
+                    Number(divida.credor_id);
 
-    const {
-        data: pessoas,
-        error: erroPessoas
-    } = await supabaseClient
-        .from("pessoas")
-        .select("id, nome");
+                const valor =
+                    Number(divida.valor);
 
-    if (erroPessoas) {
+                const ids = [
+                    devedor,
+                    credor
+                ].sort(
+                    (a, b) => a - b
+                );
 
-        console.error(erroPessoas);
+                const chave =
+                    `${ids[0]}-${ids[1]}`;
 
-        container.innerHTML =
-            "Erro ao carregar pessoas.";
+                if (!pares[chave]) {
 
-        return;
-    }
+                    pares[chave] = {
+                        pessoaA: ids[0],
+                        pessoaB: ids[1],
+                        saldo: 0
+                    };
+                }
 
-    const nomes = {};
+                if (devedor === ids[0]) {
+                    pares[chave].saldo += valor;
+                } else {
+                    pares[chave].saldo -= valor;
+                }
+            }
+        );
 
-    pessoas.forEach(pessoa => {
-        nomes[pessoa.id] = pessoa.nome;
-    });
+        container.innerHTML = "";
 
-    const pares = {};
+        let encontrou = false;
 
-    dividas.forEach(divida => {
+        Object.values(pares).forEach(
+            par => {
 
-        const devedor =
-            Number(divida.devedor_id);
+                let devedor;
+                let credor;
+                let valor;
 
-        const credor =
-            Number(divida.credor_id);
+                if (par.saldo > 0) {
 
-        const valor =
-            Number(divida.valor);
+                    devedor = par.pessoaA;
+                    credor = par.pessoaB;
+                    valor = par.saldo;
 
-        const ids = [
-            devedor,
-            credor
-        ].sort((a, b) => a - b);
+                } else if (par.saldo < 0) {
 
-        const chave =
-            `${ids[0]}-${ids[1]}`;
+                    devedor = par.pessoaB;
+                    credor = par.pessoaA;
+                    valor =
+                        Math.abs(par.saldo);
 
-        if (!pares[chave]) {
+                } else {
+                    return;
+                }
 
-            pares[chave] = {
-                pessoaA: ids[0],
-                pessoaB: ids[1],
-                saldo: 0
-            };
+                encontrou = true;
+
+                const div =
+                    document.createElement("div");
+
+                div.className =
+                    "resumo-item";
+
+                div.textContent =
+                    `${nomes[devedor] || "Desconhecido"} deve ${euro(valor)} a ${nomes[credor] || "Desconhecido"}`;
+
+                container.appendChild(div);
+            }
+        );
+
+        if (!encontrou) {
+            container.textContent =
+                "Não existem saldos pendentes.";
         }
 
-        if (devedor === ids[0]) {
+    } catch (erro) {
 
-            pares[chave].saldo += valor;
-
-        } else {
-
-            pares[chave].saldo -= valor;
-        }
-    });
-
-    container.innerHTML = "";
-
-    let encontrou = false;
-
-    Object.values(pares).forEach(par => {
-
-        let devedor;
-        let credor;
-        let valor;
-
-        if (par.saldo > 0) {
-
-            devedor = par.pessoaA;
-            credor = par.pessoaB;
-            valor = par.saldo;
-
-        } else if (par.saldo < 0) {
-
-            devedor = par.pessoaB;
-            credor = par.pessoaA;
-            valor = Math.abs(par.saldo);
-
-        } else {
-
-            return;
-        }
-
-        encontrou = true;
-
-        const div =
-            document.createElement("div");
-
-        div.className =
-            "resumo-item";
-
-        div.innerHTML = `
-            <strong>
-                ${nomes[devedor] || "Desconhecido"}
-                deve
-                ${euro(valor)}
-                a
-                ${nomes[credor] || "Desconhecido"}
-            </strong>
-        `;
-
-        container.appendChild(div);
-    });
-
-    if (!encontrou) {
+        console.error(erro);
 
         container.innerHTML =
-            "Não existem saldos pendentes.";
+            `<strong>ERRO:</strong><br>${erro.message}`;
+
     }
 }
     /* =================================

@@ -1230,22 +1230,156 @@ async function registarDivida() {
 
 async function carregarSaldos() {
 
-    alert("ENTREI EM CARREGAR SALDOS");
+    const container =
+        document.getElementById("listaDividas");
 
-    const resultado =
-        await supabaseClient
-            .from("dividas")
-            .select("*");
+    if (!container) {
+        return;
+    }
 
-    alert(
-        "RESPOSTA DO SUPABASE:\n\n" +
-        JSON.stringify(
-            resultado,
-            null,
-            2
+    container.innerHTML =
+        "A carregar saldos...";
+
+    const {
+        data: dividas,
+        error
+    } = await supabaseClient
+        .from("dividas")
+        .select(
+            "id, valor, liquidado, devedor_id, credor_id"
         )
-    );
+        .eq(
+            "liquidado",
+            false
+        );
 
+    if (error) {
+
+        console.error(error);
+
+        container.innerHTML =
+            "Erro ao carregar saldos: " +
+            error.message;
+
+        return;
+    }
+
+    const {
+        data: pessoas,
+        error: erroPessoas
+    } = await supabaseClient
+        .from("pessoas")
+        .select("id, nome");
+
+    if (erroPessoas) {
+
+        console.error(erroPessoas);
+
+        container.innerHTML =
+            "Erro ao carregar pessoas.";
+
+        return;
+    }
+
+    const nomes = {};
+
+    pessoas.forEach(pessoa => {
+        nomes[pessoa.id] = pessoa.nome;
+    });
+
+    const pares = {};
+
+    dividas.forEach(divida => {
+
+        const devedor =
+            Number(divida.devedor_id);
+
+        const credor =
+            Number(divida.credor_id);
+
+        const valor =
+            Number(divida.valor);
+
+        const ids = [
+            devedor,
+            credor
+        ].sort((a, b) => a - b);
+
+        const chave =
+            `${ids[0]}-${ids[1]}`;
+
+        if (!pares[chave]) {
+
+            pares[chave] = {
+                pessoaA: ids[0],
+                pessoaB: ids[1],
+                saldo: 0
+            };
+        }
+
+        if (devedor === ids[0]) {
+
+            pares[chave].saldo += valor;
+
+        } else {
+
+            pares[chave].saldo -= valor;
+        }
+    });
+
+    container.innerHTML = "";
+
+    let encontrou = false;
+
+    Object.values(pares).forEach(par => {
+
+        let devedor;
+        let credor;
+        let valor;
+
+        if (par.saldo > 0) {
+
+            devedor = par.pessoaA;
+            credor = par.pessoaB;
+            valor = par.saldo;
+
+        } else if (par.saldo < 0) {
+
+            devedor = par.pessoaB;
+            credor = par.pessoaA;
+            valor = Math.abs(par.saldo);
+
+        } else {
+
+            return;
+        }
+
+        encontrou = true;
+
+        const div =
+            document.createElement("div");
+
+        div.className =
+            "resumo-item";
+
+        div.innerHTML = `
+            <strong>
+                ${nomes[devedor] || "Desconhecido"}
+                deve
+                ${euro(valor)}
+                a
+                ${nomes[credor] || "Desconhecido"}
+            </strong>
+        `;
+
+        container.appendChild(div);
+    });
+
+    if (!encontrou) {
+
+        container.innerHTML =
+            "Não existem saldos pendentes.";
+    }
 }
     /* =================================
        SALDOS LÍQUIDOS

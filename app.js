@@ -1156,242 +1156,105 @@ async function registarDivida() {
 ===================================== */
 
 async function carregarSaldos() {
+    const container = document.getElementById("listaDividas");
+    if (!container) return;
 
-    const container =
-        document.getElementById(
-            "listaDividas"
-        );
+    container.textContent = "A carregar saldos...";
 
-    if (!container) {
-        return;
-    }
-
-    container.textContent =
-        "A carregar saldos...";
-
-
-    const {
-        data: dividas,
-        error: erroDividas
-    } =
-        await supabaseClient
-            .from("dividas")
-            .select(
-                "id, valor, liquidado, devedor_id, credor_id"
-            )
-            .eq(
-                "liquidado",
-                false
-            );
+    const { data: dividas, error: erroDividas } = await supabaseClient
+        .from("dividas")
+        .select("id, valor, liquidado, devedor_id, credor_id")
+        .eq("liquidado", false);
 
     if (erroDividas) {
-
-        console.error(
-            "Erro ao carregar dívidas:",
-            erroDividas
-        );
-
-        container.textContent =
-            "Erro ao carregar saldos: " +
-            erroDividas.message;
-
+        console.error("Erro ao carregar dívidas:", erroDividas);
+        container.textContent = "Erro ao carregar saldos: " + erroDividas.message;
         return;
     }
 
-
-    if (
-        !dividas ||
-        dividas.length === 0
-    ) {
-
-        container.textContent =
-            "Não existem saldos pendentes.";
-
+    if (!dividas || dividas.length === 0) {
+        container.textContent = "Não existem saldos pendentes.";
         return;
     }
 
-
-    const {
-        data: pessoas,
-        error: erroPessoas
-    } =
-        await supabaseClient
-            .from("pessoas")
-            .select("id, nome");
+    const { data: pessoas, error: erroPessoas } = await supabaseClient
+        .from("pessoas")
+        .select("id, nome");
 
     if (erroPessoas) {
-
-        console.error(
-            "Erro ao carregar pessoas:",
-            erroPessoas
-        );
-
-        container.textContent =
-            "Erro ao carregar pessoas: " +
-            erroPessoas.message;
-
+        console.error("Erro ao carregar pessoas:", erroPessoas);
+        container.textContent = "Erro ao carregar pessoas: " + erroPessoas.message;
         return;
     }
-
 
     const nomes = {};
+    pessoas.forEach(pessoa => {
+        nomes[pessoa.id] = pessoa.nome;
+    });
 
-    pessoas.forEach(
-        pessoa => {
-            nomes[pessoa.id] =
-                pessoa.nome;
-        }
-    );
-
-   async function registarPagamento(
-    devedorId,
-    credorId,
-    dividaIds,
-    saldoAtual
-) {
-
-    const valorInput =
-        prompt(
-            `Quanto foi pago?\n\nSaldo atual: ${euro(saldoAtual)}`
-        );
-
-    if (
-        valorInput === null
-    ) {
-        return;
-    }
-
-    const valorPago =
-        Number(
-            valorInput.replace(",", ".")
-        );
-
-    if (
-        !Number.isFinite(valorPago) ||
-        valorPago <= 0
-    ) {
-
-        alert(
-            "Introduza um valor válido."
-        );
-
-        return;
-    }
-
-    if (
-        valorPago > saldoAtual
-    ) {
-
-        alert(
-            "O pagamento não pode ser superior ao saldo atual."
-        );
-
-        return;
-    }
-
-    let restantePagamento =
-        valorPago;
-
-    for (
-        const dividaId of dividaIds
-    ) {
-
-        if (
-            restantePagamento <= 0
-        ) {
-            break;
-        }
-
-        const {
-            data: divida,
-            error
-        } =
-            await supabaseClient
-                .from("dividas")
-                .select(
-                    "id, valor, valor_pago"
-                )
-                .eq(
-                    "id",
-                    dividaId
-                )
-                .single();
-
-        if (error) {
-
-            alert(
-                "Erro ao ler a dívida:\n" +
-                error.message
-            );
-
-            return;
-        }
-
-        const valorOriginal =
-            Number(divida.valor);
-
-        const valorJaPago =
-            Number(
-                divida.valor_pago || 0
-            );
-
-        const valorEmFalta =
-            valorOriginal -
-            valorJaPago;
-
-        const pagamentoNestaDivida =
-            Math.min(
-                restantePagamento,
-                valorEmFalta
-            );
-
-        const novoValorPago =
-            valorJaPago +
-            pagamentoNestaDivida;
-
-        const liquidado =
-            novoValorPago >=
-            valorOriginal;
-
-        const {
-            error: erroUpdate
-        } =
-            await supabaseClient
-                .from("dividas")
-                .update({
-                    valor_pago:
-                        novoValorPago,
-
-                    liquidado:
-                        liquidado
-                })
-                .eq(
-                    "id",
-                    dividaId
-                );
-
-        if (erroUpdate) {
-
-            alert(
-                "Erro ao registar pagamento:\n" +
-                erroUpdate.message
-            );
-
-            return;
-        }
-
-        restantePagamento -=
-            pagamentoNestaDivida;
-    }
-
-    alert(
-        `Pagamento de ${euro(valorPago)} registado.`
-    );
-
-    await carregarSaldos();
+    // O resto da renderização da tua lista de saldos...
 }
 
+// >>> A FUNÇÃO REGISTAR PAGAMENTO DEVE FICAR AQUI FORA (Escopo Global) <<<
+async function registarPagamento(devedorId, credorId, dividaIds, saldoAtual) {
+    const valorInput = prompt(`Quanto foi pago?\n\nSaldo atual: ${euro(saldoAtual)}`);
 
+    if (valorInput === null) return;
+
+    const valorPago = Number(valorInput.replace(",", "."));
+
+    if (!Number.isFinite(valorPago) || valorPago <= 0) {
+        alert("Introduza um valor válido.");
+        return;
+    }
+
+    if (valorPago > saldoAtual) {
+        alert("O pagamento não pode ser superior ao saldo atual.");
+        return;
+    }
+
+    let restantePagamento = valorPago;
+
+    for (const dividaId of dividaIds) {
+        if (restantePagamento <= 0) break;
+
+        const { data: divida, error } = await supabaseClient
+            .from("dividas")
+            .select("id, valor, valor_pago")
+            .eq("id", dividaId)
+            .single();
+
+        if (error) {
+            alert("Erro ao ler a dívida:\n" + error.message);
+            return;
+        }
+
+        const valorOriginal = Number(divida.valor);
+        const valorJaPago = Number(divida.valor_pago || 0);
+        const valorEmFalta = valorOriginal - valorJaPago;
+        const pagamentoNestaDivida = Math.min(restantePagamento, valorEmFalta);
+        const novoValorPago = valorJaPago + pagamentoNestaDivida;
+        const liquidado = novoValorPago >= valorOriginal;
+
+        const { error: erroUpdate } = await supabaseClient
+            .from("dividas")
+            .update({
+                valor_pago: novoValorPago,
+                liquidado: liquidado
+            })
+            .eq("id", dividaId);
+
+        if (erroUpdate) {
+            alert("Erro ao registar pagamento:\n" + erroUpdate.message);
+            return;
+        }
+
+        restantePagamento -= pagamentoNestaDivida;
+    }
+
+    alert(`Pagamento de ${euro(valorPago)} registado.`);
+    await carregarSaldos();
+}
     /* =================================
        CONSOLIDAR SALDOS
     ================================= */

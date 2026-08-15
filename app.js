@@ -1228,7 +1228,6 @@ async function registarDivida() {
    SUPABASE — SALDOS
 ===================================== */
 
-```javascript
 async function carregarSaldos() {
 
     const container =
@@ -1286,7 +1285,6 @@ async function carregarSaldos() {
     });
 
 }
-```
 
         container.innerHTML = "";
 

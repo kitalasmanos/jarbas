@@ -1235,7 +1235,39 @@ async function carregarSaldos() {
             "listaDividas"
         );
 
-   alert("A carregar saldos...");
+   const resultado =
+    await supabaseClient
+        .from("dividas")
+        .select(
+            "id, valor, liquidado, devedor_id, credor_id"
+        )
+        .eq(
+            "liquidado",
+            false
+        );
+
+if (resultado.error) {
+
+    alert(
+        "ERRO AO LER DÍVIDAS:\n\n" +
+        resultado.error.message
+    );
+
+    console.error(
+        resultado.error
+    );
+
+    return;
+}
+
+alert(
+    "DÍVIDAS ENCONTRADAS: " +
+    resultado.data.length
+);
+
+console.log(
+    resultado.data
+);
 
     if (!container) {
         return;

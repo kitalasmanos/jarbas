@@ -83,17 +83,64 @@
 
     </div>
 
-    <div class="info-box">
+    <section class="card">
 
-        <strong>Exemplo:</strong>
+    <h2>👥 Quem Deve a Quem</h2>
 
-        <p>
-            Hugo paga 50 € de água e Natalia
-            deve 25 €.
-        </p>
+    <div class="form-grid">
+
+        <div>
+            <label>Quem pagou?</label>
+            <select id="pagadorDivida"></select>
+        </div>
+
+        <div>
+            <label>Quem deve?</label>
+            <select id="devedorDivida"></select>
+        </div>
+
+        <div>
+            <label>Descrição</label>
+            <input
+                type="text"
+                id="descricaoDivida"
+                placeholder="Ex.: Água">
+        </div>
+
+        <div>
+            <label>Valor total pago (€)</label>
+            <input
+                type="number"
+                id="valorTotalDivida"
+                step="0.01"
+                placeholder="50.00">
+        </div>
+
+        <div>
+            <label>Valor que deve (€)</label>
+            <input
+                type="number"
+                id="valorDevido"
+                step="0.01"
+                placeholder="25.00">
+        </div>
+
+        <div>
+            <label>Data</label>
+            <input
+                type="date"
+                id="dataDivida">
+        </div>
+
+        <div>
+            <button onclick="registarDivida()">
+                Registar Dívida
+            </button>
+        </div>
 
     </div>
 
+</section>
 </section>
 
 <section class="card">

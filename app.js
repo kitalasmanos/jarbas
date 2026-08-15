@@ -1228,106 +1228,65 @@ async function registarDivida() {
    SUPABASE — SALDOS
 ===================================== */
 
+```javascript
 async function carregarSaldos() {
 
     const container =
         document.getElementById("listaDividas");
 
     if (!container) {
-        alert("ERRO: listaDividas não existe.");
         return;
     }
 
-    container.innerHTML = "Passo 1...";
+    container.textContent =
+        "A consultar o Supabase...";
 
-    try {
+    const { data, error } =
+        await supabaseClient
+            .from("dividas")
+            .select(
+                "id, valor, devedor_id, credor_id, liquidado"
+            )
+            .eq("liquidado", false);
 
-        const resultadoDividas =
-            await supabaseClient
-                .from("dividas")
-                .select(
-                    "id, valor, liquidado, devedor_id, credor_id"
-                )
-                .eq("liquidado", false);
+    if (error) {
 
-        if (resultadoDividas.error) {
-            throw new Error(
-                "DÍVIDAS: " +
-                resultadoDividas.error.message
-            );
-        }
+        console.error(error);
 
-        container.innerHTML =
-            "Passo 2 — " +
-            resultadoDividas.data.length +
-            " dívidas encontradas...";
+        container.textContent =
+            "ERRO: " + error.message;
 
-        const resultadoPessoas =
-            await supabaseClient
-                .from("pessoas")
-                .select("id, nome");
+        return;
+    }
 
-        if (resultadoPessoas.error) {
-            throw new Error(
-                "PESSOAS: " +
-                resultadoPessoas.error.message
-            );
-        }
+    if (!data || data.length === 0) {
 
-        container.innerHTML =
-            "Passo 3 — " +
-            resultadoPessoas.data.length +
-            " pessoas encontradas...";
+        container.textContent =
+            "Não existem dívidas pendentes.";
 
-        const nomes = {};
+        return;
+    }
 
-        resultadoPessoas.data.forEach(
-            pessoa => {
-                nomes[pessoa.id] =
-                    pessoa.nome;
-            }
-        );
+    container.innerHTML =
+        `<strong>${data.length} dívida(s) encontrada(s)</strong>`;
 
-        const pares = {};
+    data.forEach(divida => {
 
-        resultadoDividas.data.forEach(
-            divida => {
+        const item =
+            document.createElement("div");
 
-                const devedor =
-                    Number(divida.devedor_id);
+        item.className =
+            "resumo-item";
 
-                const credor =
-                    Number(divida.credor_id);
+        item.textContent =
+            `ID ${divida.id} — ${euro(divida.valor)} — devedor ${divida.devedor_id} — credor ${divida.credor_id}`;
 
-                const valor =
-                    Number(divida.valor);
+        container.appendChild(item);
 
-                const ids = [
-                    devedor,
-                    credor
-                ].sort(
-                    (a, b) => a - b
-                );
+    });
 
-                const chave =
-                    `${ids[0]}-${ids[1]}`;
-
-                if (!pares[chave]) {
-
-                    pares[chave] = {
-                        pessoaA: ids[0],
-                        pessoaB: ids[1],
-                        saldo: 0
-                    };
-                }
-
-                if (devedor === ids[0]) {
-                    pares[chave].saldo += valor;
-                } else {
-                    pares[chave].saldo -= valor;
-                }
-            }
-        );
+}
+```
 
         container.innerHTML = "";
 

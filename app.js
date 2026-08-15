@@ -1816,8 +1816,6 @@ function atualizarTudo() {
 
 async function iniciarAplicacao() {
 
-    alert("APP.JS A FUNCIONAR");
-
     prepararDatas();
 
     const orcamento =
@@ -1832,15 +1830,9 @@ async function iniciarAplicacao() {
 
     atualizarTudo();
 
-    alert("VOU CARREGAR PESSOAS");
-
     await carregarPessoasDividas();
 
-    alert("PESSOAS CARREGADAS");
-
     await carregarSaldos();
-
-    alert("SALDOS CARREGADOS");
 }
 
 

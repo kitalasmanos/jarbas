@@ -1,3 +1,8 @@
+```css
+/* =====================================
+   GESTOR FINANCEIRO 2.0
+===================================== */
+
 * {
     margin: 0;
     padding: 0;
@@ -6,212 +11,639 @@
 
 :root {
     --primary: #16a34a;
+    --primary-dark: #15803d;
+
+    --blue: #2563eb;
+    --purple: #7c3aed;
+
+    --success: #16a34a;
     --danger: #dc2626;
-    --success: #15803d;
     --warning: #f59e0b;
-    --bg: #f3f4f6;
+
+    --background: #f3f4f6;
     --card: #ffffff;
+
     --text: #1f2937;
+    --muted: #6b7280;
+
+    --border: #d1d5db;
+    --soft: #f8fafc;
+
+    --radius: 14px;
 }
 
+
+/* =====================================
+   BASE
+===================================== */
+
 body {
-    font-family: Arial, Helvetica, sans-serif;
-    background: var(--bg);
+    font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+    background: var(--background);
     color: var(--text);
+
+    line-height: 1.5;
 }
+
+
+/* =====================================
+   HEADER
+===================================== */
 
 .header {
     background: var(--primary);
     color: white;
+
+    padding: 28px 20px;
+
     text-align: center;
-    padding: 25px;
+
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
-.container {
-    max-width: 1200px;
-    margin: auto;
-    padding: 20px;
+.header h1 {
+    font-size: 32px;
+    margin-bottom: 4px;
 }
+
+.header p {
+    font-size: 16px;
+    opacity: 0.95;
+}
+
+
+/* =====================================
+   CONTAINER
+===================================== */
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+
+    margin: 0 auto;
+
+    padding: 24px 16px;
+}
+
+
+/* =====================================
+   CARDS
+===================================== */
 
 .card {
     background: var(--card);
-    padding: 20px;
-    border-radius: 12px;
+
+    border-radius: var(--radius);
+
+    padding: 22px;
+
     margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+
+    box-shadow:
+        0 2px 10px rgba(0, 0, 0, 0.07);
 }
 
 .card h2 {
-    margin-bottom: 15px;
+    font-size: 22px;
+
+    margin-bottom: 16px;
+
+    color: var(--text);
 }
+
+.section-help {
+    color: var(--muted);
+
+    margin-top: -8px;
+    margin-bottom: 18px;
+
+    font-size: 14px;
+}
+
+
+/* =====================================
+   DASHBOARD
+===================================== */
 
 .dashboard {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 15px;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(210px, 1fr)
+        );
+
+    gap: 16px;
 }
 
 .stat-card {
-    padding: 20px;
-    border-radius: 10px;
     color: white;
+
+    padding: 20px;
+
+    border-radius: 12px;
+
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 8px;
 }
 
-.stat-card h3 {
-    font-size: 16px;
-    margin-bottom: 10px;
+.stat-card span {
+    font-size: 15px;
+
+    opacity: 0.95;
 }
 
-.stat-card p {
-    font-size: 26px;
-    font-weight: bold;
+.stat-card strong {
+    font-size: 28px;
 }
 
 .saldo {
-    background: #2563eb;
+    background: var(--blue);
 }
 
 .receita {
-    background: #16a34a;
+    background: var(--success);
 }
 
 .despesa {
-    background: #dc2626;
+    background: var(--danger);
 }
 
 .orcamento {
-    background: #7c3aed;
+    background: var(--purple);
 }
+
+
+/* =====================================
+   FORMULÁRIOS
+===================================== */
 
 .form-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 15px;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(220px, 1fr)
+        );
+
+    gap: 16px;
+}
+
+.form-grid > div {
+    min-width: 0;
 }
 
 label {
     display: block;
-    margin-bottom: 6px;
+
     font-weight: bold;
+
+    margin-bottom: 6px;
+
+    color: var(--text);
 }
 
 input,
 select {
     width: 100%;
-    padding: 10px;
-    border: 1px solid #d1d5db;
+
+    min-height: 44px;
+
+    padding: 10px 12px;
+
+    border:
+        1px solid var(--border);
+
     border-radius: 8px;
+
+    background: white;
+
+    color: var(--text);
+
+    font-size: 15px;
+
+    outline: none;
 }
 
+input:focus,
+select:focus {
+    border-color: var(--primary);
+
+    box-shadow:
+        0 0 0 2px
+        rgba(22, 163, 74, 0.12);
+}
+
+.form-button {
+    display: flex;
+
+    align-items: flex-end;
+}
+
+
+/* =====================================
+   BOTÕES
+===================================== */
+
 button {
-    background: var(--primary);
-    color: white;
+    min-height: 44px;
+
+    padding: 10px 16px;
+
     border: none;
-    padding: 12px;
+
     border-radius: 8px;
+
+    background: var(--primary);
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
     cursor: pointer;
+
+    transition:
+        transform 0.15s ease,
+        opacity 0.15s ease;
 }
 
 button:hover {
-    opacity: .9;
+    opacity: 0.92;
 }
+
+button:active {
+    transform: scale(0.98);
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+
+/* =====================================
+   PROGRESSO ORÇAMENTO
+===================================== */
 
 .progress-container {
     width: 100%;
-    height: 25px;
+
+    height: 24px;
+
+    margin-top: 18px;
+
     background: #e5e7eb;
+
     border-radius: 20px;
+
     overflow: hidden;
-    margin-top: 15px;
 }
 
 #progressBar {
-    height: 100%;
     width: 0%;
+
+    height: 100%;
+
     background: var(--success);
-    transition: 0.3s;
+
+    transition:
+        width 0.3s ease,
+        background 0.3s ease;
 }
 
 #percentagemOrcamento {
     margin-top: 10px;
+
     font-weight: bold;
+
+    color: var(--muted);
 }
 
-.table-responsive {
+
+/* =====================================
+   TABELAS
+===================================== */
+
+.table-container {
+    width: 100%;
+
     overflow-x: auto;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
-}
 
-th {
-    background: #f1f5f9;
+    min-width: 700px;
+
+    border-collapse: collapse;
 }
 
 th,
 td {
-    padding: 10px;
-    border: 1px solid #e5e7eb;
+    padding: 11px 10px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+
     text-align: left;
+
+    vertical-align: middle;
+}
+
+th {
+    background: var(--soft);
+
+    font-weight: bold;
+}
+
+tbody tr:hover {
+    background: #fafafa;
 }
 
 .receita-text {
     color: var(--success);
+
     font-weight: bold;
 }
 
 .despesa-text {
     color: var(--danger);
+
     font-weight: bold;
 }
 
+
+/* =====================================
+   BOTÕES DA TABELA
+===================================== */
+
+table button {
+    min-height: 36px;
+
+    padding: 7px 10px;
+
+    font-size: 13px;
+
+    margin: 2px;
+}
+
+table button:last-child {
+    background: var(--danger);
+}
+
+
+/* =====================================
+   RESUMOS
+===================================== */
+
+.resumo-item {
+    padding: 14px 4px;
+
+    border-bottom:
+        1px solid #e5e7eb;
+}
+
+.resumo-item:last-child {
+    border-bottom: none;
+}
+
+.resumo-item strong {
+    font-size: 17px;
+}
+
+
+/* =====================================
+   GRÁFICO
+===================================== */
+
+.chart-container {
+    position: relative;
+
+    width: 100%;
+
+    max-width: 700px;
+
+    min-height: 320px;
+
+    margin: 0 auto;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: auto !important;
+}
+
+
+/* =====================================
+   AÇÕES
+===================================== */
+
 .actions {
     display: flex;
+
     flex-wrap: wrap;
+
     gap: 10px;
 }
 
-.resumo-item {
-    padding: 12px;
-    border-bottom: 1px solid #eee;
+.actions button {
+    flex: 0 1 auto;
 }
 
-footer {
+
+/* =====================================
+   IMPORTAÇÃO
+===================================== */
+
+.import-area {
+    display: grid;
+
+    grid-template-columns:
+        1fr auto;
+
+    gap: 12px;
+
+    align-items: end;
+
+    margin-top: 20px;
+}
+
+.import-area label {
+    grid-column: 1 / -1;
+}
+
+.import-area input {
+    min-width: 0;
+}
+
+
+/* =====================================
+   FOOTER
+===================================== */
+
+.footer {
     text-align: center;
-    padding: 20px;
-    color: #6b7280;
+
+    padding: 24px 16px;
+
+    color: var(--muted);
+
+    font-size: 14px;
 }
 
-@media(max-width:768px) {
+
+/* =====================================
+   MOBILE
+===================================== */
+
+@media (max-width: 768px) {
+
+    .header {
+        padding: 22px 15px;
+    }
+
+    .header h1 {
+        font-size: 25px;
+    }
+
+    .header p {
+        font-size: 14px;
+    }
+
     .container {
-        padding: 10px;
+        padding:
+            14px 10px;
     }
+
     .card {
-        padding: 15px;
+        padding: 16px;
+
+        margin-bottom: 14px;
     }
-    button {
+
+    .card h2 {
+        font-size: 20px;
+    }
+
+    .dashboard {
+        grid-template-columns:
+            1fr 1fr;
+    }
+
+    .stat-card {
+        padding: 16px;
+    }
+
+    .stat-card strong {
+        font-size: 21px;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-button {
+        align-items: stretch;
+    }
+
+    .form-button button {
         width: 100%;
     }
+
     .actions {
         flex-direction: column;
     }
-    .stat-card p {
-        font-size: 22px;
+
+    .actions button {
+        width: 100%;
+    }
+
+    .import-area {
+        grid-template-columns: 1fr;
+    }
+
+    .import-area button {
+        width: 100%;
+    }
+
+    .chart-container {
+        min-height: 260px;
     }
 }
 
-@media print {
-    button,
-    input[type=file] {
-        display: none;
+
+/* =====================================
+   MOBILE PEQUENO
+===================================== */
+
+@media (max-width: 430px) {
+
+    .dashboard {
+        grid-template-columns: 1fr;
     }
+
+    .stat-card strong {
+        font-size: 24px;
+    }
+
+    input,
+    select,
+    button {
+        font-size: 16px;
+    }
+}
+
+
+/* =====================================
+   IMPRESSÃO
+===================================== */
+
+@media print {
+
     body {
         background: white;
     }
+
+    .header {
+        background: white;
+
+        color: black;
+
+        box-shadow: none;
+    }
+
     .card {
         box-shadow: none;
-        border: 1px solid #ccc;
+
+        border:
+            1px solid #ddd;
+
+        break-inside: avoid;
+    }
+
+    button,
+    input,
+    select,
+    .actions,
+    .import-area,
+    .progress-container {
+        display: none !important;
+    }
+
+    .footer {
+        color: black;
     }
 }
+```

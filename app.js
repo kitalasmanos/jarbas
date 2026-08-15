@@ -19,17 +19,14 @@ let graficoCategorias = null;
 ===================================== */
 
 function guardarDados() {
-
     localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(dados)
     );
-
 }
 
 
 function euro(valor) {
-
     return Number(valor || 0).toLocaleString(
         "pt-PT",
         {
@@ -37,16 +34,23 @@ function euro(valor) {
             currency: "EUR"
         }
     );
-
 }
 
 
 function hojeISO() {
-
     return new Date()
         .toISOString()
         .split("T")[0];
+}
 
+
+function escapeHTML(valor) {
+    return String(valor)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
 }
 
 
@@ -62,17 +66,9 @@ function calcularTotais() {
     dados.movimentos.forEach(movimento => {
 
         if (movimento.tipo === "receita") {
-
-            receitas += Number(
-                movimento.valor
-            );
-
+            receitas += Number(movimento.valor);
         } else {
-
-            despesas += Number(
-                movimento.valor
-            );
-
+            despesas += Number(movimento.valor);
         }
 
     });
@@ -82,44 +78,49 @@ function calcularTotais() {
         despesas,
         saldo: receitas - despesas
     };
-
 }
 
 
 function atualizarDashboard() {
 
-    const totais =
-        calcularTotais();
+    const totais = calcularTotais();
 
-    document.getElementById(
-        "saldoAtual"
-    ).textContent =
-        euro(totais.saldo);
+    const saldo =
+        document.getElementById("saldoAtual");
 
-    document.getElementById(
-        "totalReceitas"
-    ).textContent =
-        euro(totais.receitas);
+    const receitas =
+        document.getElementById("totalReceitas");
 
-    document.getElementById(
-        "totalDespesas"
-    ).textContent =
-        euro(totais.despesas);
+    const despesas =
+        document.getElementById("totalDespesas");
 
     const restante =
-        dados.orcamento -
-        totais.despesas;
+        document.getElementById("orcamentoRestante");
 
-    document.getElementById(
-        "orcamentoRestante"
-    ).textContent =
-        euro(restante);
+    if (saldo) {
+        saldo.textContent = euro(totais.saldo);
+    }
 
+    if (receitas) {
+        receitas.textContent = euro(totais.receitas);
+    }
+
+    if (despesas) {
+        despesas.textContent = euro(totais.despesas);
+    }
+
+    if (restante) {
+        restante.textContent =
+            euro(
+                dados.orcamento -
+                totais.despesas
+            );
+    }
 }
 
 
 /* =====================================
-   DATA
+   DATAS
 ===================================== */
 
 function prepararDatas() {
@@ -138,18 +139,15 @@ function prepararDatas() {
         dataMovimento &&
         !dataMovimento.value
     ) {
-        dataMovimento.value =
-            hojeISO();
+        dataMovimento.value = hojeISO();
     }
 
     if (
         dataDivida &&
         !dataDivida.value
     ) {
-        dataDivida.value =
-            hojeISO();
+        dataDivida.value = hojeISO();
     }
-
 }
 
 
@@ -160,38 +158,29 @@ function prepararDatas() {
 function adicionarMovimento() {
 
     const tipo =
-        document.getElementById(
-            "tipo"
-        ).value;
+        document.getElementById("tipo")?.value;
 
     const categoria =
-        document.getElementById(
-            "categoria"
-        ).value;
+        document.getElementById("categoria")?.value;
 
     const descricao =
-        document.getElementById(
-            "descricao"
-        ).value.trim();
+        document
+            .getElementById("descricao")
+            ?.value
+            .trim();
 
     const valor =
         Number(
-            document.getElementById(
-                "valor"
-            ).value
+            document.getElementById("valor")?.value
         );
 
     const data =
         document.getElementById(
             "dataMovimento"
-        ).value;
+        )?.value;
 
     if (!descricao) {
-
-        alert(
-            "Introduza uma descrição."
-        );
-
+        alert("Introduza uma descrição.");
         return;
     }
 
@@ -199,33 +188,22 @@ function adicionarMovimento() {
         !Number.isFinite(valor) ||
         valor <= 0
     ) {
-
-        alert(
-            "Introduza um valor válido."
-        );
-
+        alert("Introduza um valor válido.");
         return;
     }
 
     if (!data) {
-
-        alert(
-            "Selecione uma data."
-        );
-
+        alert("Selecione uma data.");
         return;
     }
 
     dados.movimentos.push({
-
         id: Date.now(),
-
         tipo,
         categoria,
         descricao,
         valor,
         data
-
     });
 
     guardarDados();
@@ -239,7 +217,6 @@ function adicionarMovimento() {
     ).value = "";
 
     atualizarTudo();
-
 }
 
 
@@ -250,7 +227,9 @@ function editarMovimento(id) {
             item => item.id === id
         );
 
-    if (!movimento) return;
+    if (!movimento) {
+        return;
+    }
 
     const descricao =
         prompt(
@@ -274,11 +253,7 @@ function editarMovimento(id) {
         !Number.isFinite(valor) ||
         valor <= 0
     ) {
-
-        alert(
-            "Valor inválido."
-        );
-
+        alert("Valor inválido.");
         return;
     }
 
@@ -292,7 +267,6 @@ function editarMovimento(id) {
     guardarDados();
 
     atualizarTudo();
-
 }
 
 
@@ -315,7 +289,6 @@ function apagarMovimento(id) {
     guardarDados();
 
     atualizarTudo();
-
 }
 
 
@@ -349,7 +322,7 @@ function obterMovimentosFiltrados() {
 
             const correspondePesquisa =
                 !pesquisa ||
-                movimento.descricao
+                String(movimento.descricao)
                     .toLowerCase()
                     .includes(pesquisa);
 
@@ -359,19 +332,16 @@ function obterMovimentosFiltrados() {
 
             const correspondeMes =
                 !mes ||
-                movimento.data.startsWith(
-                    mes
-                );
+                String(movimento.data)
+                    .startsWith(mes);
 
             return (
                 correspondePesquisa &&
                 correspondeCategoria &&
                 correspondeMes
             );
-
         }
     );
-
 }
 
 
@@ -382,21 +352,21 @@ function atualizarFiltroCategorias() {
             "filtroCategoria"
         );
 
-    if (!select) return;
+    if (!select) {
+        return;
+    }
 
-    const categoriaAtual =
+    const valorAtual =
         select.value;
 
-    const categorias =
-        [
-            ...new Set(
-                dados.movimentos.map(
-                    movimento =>
-                        movimento.categoria
-                )
+    const categorias = [
+        ...new Set(
+            dados.movimentos.map(
+                movimento =>
+                    movimento.categoria
             )
-        ]
-        .sort();
+        )
+    ].sort();
 
     select.innerHTML =
         '<option value="">Todas</option>';
@@ -415,24 +385,17 @@ function atualizarFiltroCategorias() {
             option.textContent =
                 categoria;
 
-            select.appendChild(
-                option
-            );
-
+            select.appendChild(option);
         }
     );
 
     if (
         categorias.includes(
-            categoriaAtual
+            valorAtual
         )
     ) {
-
-        select.value =
-            categoriaAtual;
-
+        select.value = valorAtual;
     }
-
 }
 
 
@@ -473,26 +436,39 @@ function configurarFiltros() {
             atualizarTudo
         );
     }
-
 }
 
 
 function limparFiltros() {
 
-    document.getElementById(
-        "pesquisa"
-    ).value = "";
+    const pesquisa =
+        document.getElementById(
+            "pesquisa"
+        );
 
-    document.getElementById(
-        "filtroCategoria"
-    ).value = "";
+    const categoria =
+        document.getElementById(
+            "filtroCategoria"
+        );
 
-    document.getElementById(
-        "filtroMes"
-    ).value = "";
+    const mes =
+        document.getElementById(
+            "filtroMes"
+        );
+
+    if (pesquisa) {
+        pesquisa.value = "";
+    }
+
+    if (categoria) {
+        categoria.value = "";
+    }
+
+    if (mes) {
+        mes.value = "";
+    }
 
     atualizarTudo();
-
 }
 
 
@@ -507,14 +483,19 @@ function renderTabela() {
             "tabelaMovimentos"
         );
 
-    if (!tbody) return;
+    if (!tbody) {
+        return;
+    }
 
     const movimentos =
         obterMovimentosFiltrados()
             .slice()
             .sort(
                 (a, b) =>
-                    b.data.localeCompare(a.data)
+                    String(b.data)
+                        .localeCompare(
+                            String(a.data)
+                        )
             );
 
     tbody.innerHTML = "";
@@ -549,7 +530,9 @@ function renderTabela() {
 
             tr.innerHTML = `
                 <td>
-                    ${movimento.data}
+                    ${escapeHTML(
+                        movimento.data
+                    )}
                 </td>
 
                 <td>
@@ -561,7 +544,9 @@ function renderTabela() {
                 </td>
 
                 <td>
-                    ${movimento.categoria}
+                    ${escapeHTML(
+                        movimento.categoria
+                    )}
                 </td>
 
                 <td>
@@ -581,6 +566,7 @@ function renderTabela() {
                 </td>
 
                 <td>
+
                     <button
                         type="button"
                         onclick="editarMovimento(${movimento.id})">
@@ -592,26 +578,13 @@ function renderTabela() {
                         onclick="apagarMovimento(${movimento.id})">
                         Apagar
                     </button>
+
                 </td>
             `;
 
             tbody.appendChild(tr);
-
         }
     );
-
-}
-
-
-function escapeHTML(valor) {
-
-    return String(valor)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
 }
 
 
@@ -625,34 +598,29 @@ function guardarOrcamento() {
         Number(
             document.getElementById(
                 "orcamentoMensal"
-            ).value
+            )?.value
         );
 
     if (
         !Number.isFinite(valor) ||
         valor < 0
     ) {
-
         alert(
             "Introduza um orçamento válido."
         );
-
         return;
     }
 
-    dados.orcamento =
-        valor;
+    dados.orcamento = valor;
 
     guardarDados();
 
     atualizarOrcamento();
-
     atualizarDashboard();
 
     alert(
         "Orçamento guardado."
     );
-
 }
 
 
@@ -679,8 +647,7 @@ function atualizarOrcamento() {
         dados.orcamento <= 0
     ) {
 
-        barra.style.width =
-            "0%";
+        barra.style.width = "0%";
 
         barra.style.background =
             "#16a34a";
@@ -703,16 +670,12 @@ function atualizarOrcamento() {
     barra.style.width =
         percentagem + "%";
 
-    if (
-        percentagem < 75
-    ) {
+    if (percentagem < 75) {
 
         barra.style.background =
             "#16a34a";
 
-    } else if (
-        percentagem < 90
-    ) {
+    } else if (percentagem < 90) {
 
         barra.style.background =
             "#f59e0b";
@@ -721,13 +684,11 @@ function atualizarOrcamento() {
 
         barra.style.background =
             "#dc2626";
-
     }
 
     texto.textContent =
         percentagem.toFixed(1) +
         "% utilizado";
-
 }
 
 
@@ -742,15 +703,14 @@ function atualizarResumoCategorias() {
             "resumoCategorias"
         );
 
-    if (!container) return;
-
-    const movimentos =
-        obterMovimentosFiltrados();
+    if (!container) {
+        return;
+    }
 
     const resumo = {};
 
-    movimentos.forEach(
-        movimento => {
+    obterMovimentosFiltrados()
+        .forEach(movimento => {
 
             if (
                 movimento.tipo !== "despesa"
@@ -767,22 +727,20 @@ function atualizarResumoCategorias() {
                 Number(
                     movimento.valor
                 );
-
-        }
-    );
+        });
 
     const categorias =
-        Object.entries(
-            resumo
-        ).sort(
-            (a, b) => b[1] - a[1]
-        );
+        Object.entries(resumo)
+            .sort(
+                (a, b) =>
+                    b[1] - a[1]
+            );
 
     if (
         categorias.length === 0
     ) {
 
-        container.innerHTML =
+        container.textContent =
             "Sem despesas registadas.";
 
         return;
@@ -811,10 +769,8 @@ function atualizarResumoCategorias() {
             `;
 
             container.appendChild(div);
-
         }
     );
-
 }
 
 
@@ -829,24 +785,17 @@ function atualizarGrafico() {
             "graficoCategorias"
         );
 
-    if (!canvas) {
-        return;
-    }
-
     if (
+        !canvas ||
         typeof Chart === "undefined"
     ) {
-
         return;
     }
-
-    const movimentos =
-        obterMovimentosFiltrados();
 
     const resumo = {};
 
-    movimentos.forEach(
-        movimento => {
+    obterMovimentosFiltrados()
+        .forEach(movimento => {
 
             if (
                 movimento.tipo !== "despesa"
@@ -863,9 +812,7 @@ function atualizarGrafico() {
                 Number(
                     movimento.valor
                 );
-
-        }
-    );
+        });
 
     const labels =
         Object.keys(resumo);
@@ -873,20 +820,14 @@ function atualizarGrafico() {
     const valores =
         Object.values(resumo);
 
-    if (
-        graficoCategorias
-    ) {
-
+    if (graficoCategorias) {
         graficoCategorias.destroy();
-
-        graficoCategorias =
-            null;
+        graficoCategorias = null;
     }
 
     if (
         labels.length === 0
     ) {
-
         return;
     }
 
@@ -907,24 +848,16 @@ function atualizarGrafico() {
                 },
 
                 options: {
-
                     responsive: true,
 
-                    maintainAspectRatio: true,
-
                     plugins: {
-
                         legend: {
                             position: "bottom"
                         }
-
                     }
-
                 }
-
             }
         );
-
 }
 
 
@@ -991,26 +924,23 @@ async function carregarPessoasDividas() {
     data.forEach(
         pessoa => {
 
-            const nome =
-                escapeHTML(
-                    pessoa.nome
-                );
-
             pagador.innerHTML += `
                 <option value="${pessoa.id}">
-                    ${nome}
+                    ${escapeHTML(
+                        pessoa.nome
+                    )}
                 </option>
             `;
 
             devedor.innerHTML += `
                 <option value="${pessoa.id}">
-                    ${nome}
+                    ${escapeHTML(
+                        pessoa.nome
+                    )}
                 </option>
             `;
-
         }
     );
-
 }
 
 
@@ -1024,69 +954,66 @@ async function registarDivida() {
         Number(
             document.getElementById(
                 "pagadorDivida"
-            ).value
+            )?.value
         );
 
     const devedorId =
         Number(
             document.getElementById(
                 "devedorDivida"
-            ).value
+            )?.value
         );
 
     const descricao =
-        document.getElementById(
-            "descricaoDivida"
-        ).value.trim();
+        document
+            .getElementById(
+                "descricaoDivida"
+            )
+            ?.value
+            .trim();
 
     const valorTotal =
         Number(
             document.getElementById(
                 "valorTotalDivida"
-            ).value
+            )?.value
         );
 
     const valorDevido =
         Number(
             document.getElementById(
                 "valorDevido"
-            ).value
+            )?.value
         );
 
     const data =
         document.getElementById(
             "dataDivida"
-        ).value;
+        )?.value;
 
     if (
         !pagadorId ||
         !devedorId
     ) {
-
         alert(
             "Selecione quem pagou e quem deve."
         );
-
         return;
     }
 
     if (
         pagadorId === devedorId
     ) {
-
         alert(
             "Quem pagou e quem deve têm de ser pessoas diferentes."
         );
-
         return;
     }
 
     if (!descricao) {
-
         alert(
             "Introduza uma descrição."
         );
-
         return;
     }
 
@@ -1094,11 +1021,9 @@ async function registarDivida() {
         !Number.isFinite(valorTotal) ||
         valorTotal <= 0
     ) {
-
         alert(
             "Introduza um valor total válido."
         );
-
         return;
     }
 
@@ -1107,26 +1032,22 @@ async function registarDivida() {
         valorDevido <= 0 ||
         valorDevido > valorTotal
     ) {
-
         alert(
             "O valor devido tem de ser maior que 0 e não pode ultrapassar o valor total."
         );
-
         return;
     }
 
     if (!data) {
-
         alert(
             "Selecione uma data."
         );
-
         return;
     }
 
 
-    /* ================================
-       1. Criar despesa partilhada
+    /* =================================
+       DESPESA PARTILHADA
     ================================= */
 
     const {
@@ -1139,10 +1060,10 @@ async function registarDivida() {
             )
             .insert([
                 {
-                    descricao,
+                    descricao: descricao,
                     valor: valorTotal,
                     pagador_id: pagadorId,
-                    data
+                    data: data
                 }
             ])
             .select("id")
@@ -1151,7 +1072,6 @@ async function registarDivida() {
     if (erroDespesa) {
 
         console.error(
-            "Erro ao criar despesa:",
             erroDespesa
         );
 
@@ -1164,8 +1084,8 @@ async function registarDivida() {
     }
 
 
-    /* ================================
-       2. Criar dívida
+    /* =================================
+       DÍVIDA
     ================================= */
 
     const {
@@ -1175,18 +1095,26 @@ async function registarDivida() {
             .from("dividas")
             .insert([
                 {
-                    despesa_id: despesa.id,
-                    devedor_id: devedorId,
-                    credor_id: pagadorId,
-                    valor: valorDevido,
-                    liquidado: false
+                    despesa_id:
+                        despesa.id,
+
+                    devedor_id:
+                        devedorId,
+
+                    credor_id:
+                        pagadorId,
+
+                    valor:
+                        valorDevido,
+
+                    liquidado:
+                        false
                 }
             ]);
 
     if (erroDivida) {
 
         console.error(
-            "Erro ao criar dívida:",
             erroDivida
         );
 
@@ -1199,8 +1127,8 @@ async function registarDivida() {
     }
 
 
-    /* ================================
-       3. Limpar formulário
+    /* =================================
+       LIMPAR
     ================================= */
 
     document.getElementById(
@@ -1220,131 +1148,104 @@ async function registarDivida() {
     );
 
     await carregarSaldos();
-
 }
 
 
 /* =====================================
-   SUPABASE — SALDOS
+   SALDOS
 ===================================== */
 
 async function carregarSaldos() {
 
     const container =
-        document.getElementById("listaDividas");
+        document.getElementById(
+            "listaDividas"
+        );
 
     if (!container) {
         return;
     }
 
     container.textContent =
-        "A consultar o Supabase...";
+        "A carregar saldos...";
 
-    const { data, error } =
+
+    const {
+        data: dividas,
+        error: erroDividas
+    } =
         await supabaseClient
             .from("dividas")
             .select(
-                "id, valor, devedor_id, credor_id, liquidado"
+                "id, valor, liquidado, devedor_id, credor_id"
             )
-            .eq("liquidado", false);
+            .eq(
+                "liquidado",
+                false
+            );
 
-    if (error) {
+    if (erroDividas) {
 
-        console.error(error);
-
-        container.textContent =
-            "ERRO: " + error.message;
-
-        return;
-    }
-
-    if (!data || data.length === 0) {
-
-        container.textContent =
-            "Não existem dívidas pendentes.";
-
-        return;
-    }
-
-    container.innerHTML =
-        `<strong>${data.length} dívida(s) encontrada(s)</strong>`;
-
-    data.forEach(divida => {
-
-        const item =
-            document.createElement("div");
-
-        item.className =
-            "resumo-item";
-
-        item.textContent =
-            `ID ${divida.id} — ${euro(divida.valor)} — devedor ${divida.devedor_id} — credor ${divida.credor_id}`;
-
-        container.appendChild(item);
-
-    });
-
-}
-
-        container.innerHTML = "";
-
-        let encontrou = false;
-
-        Object.values(pares).forEach(
-            par => {
-
-                let devedor;
-                let credor;
-                let valor;
-
-                if (par.saldo > 0) {
-
-                    devedor = par.pessoaA;
-                    credor = par.pessoaB;
-                    valor = par.saldo;
-
-                } else if (par.saldo < 0) {
-
-                    devedor = par.pessoaB;
-                    credor = par.pessoaA;
-                    valor =
-                        Math.abs(par.saldo);
-
-                } else {
-                    return;
-                }
-
-                encontrou = true;
-
-                const div =
-                    document.createElement("div");
-
-                div.className =
-                    "resumo-item";
-
-                div.textContent =
-                    `${nomes[devedor] || "Desconhecido"} deve ${euro(valor)} a ${nomes[credor] || "Desconhecido"}`;
-
-                container.appendChild(div);
-            }
+        console.error(
+            "Erro ao carregar dívidas:",
+            erroDividas
         );
 
-        if (!encontrou) {
-            container.textContent =
-                "Não existem saldos pendentes.";
-        }
+        container.textContent =
+            "Erro ao carregar saldos: " +
+            erroDividas.message;
 
-    } catch (erro) {
-
-        console.error(erro);
-
-        container.innerHTML =
-            `<strong>ERRO:</strong><br>${erro.message}`;
-
+        return;
     }
-}
+
+
+    if (
+        !dividas ||
+        dividas.length === 0
+    ) {
+
+        container.textContent =
+            "Não existem saldos pendentes.";
+
+        return;
+    }
+
+
+    const {
+        data: pessoas,
+        error: erroPessoas
+    } =
+        await supabaseClient
+            .from("pessoas")
+            .select("id, nome");
+
+    if (erroPessoas) {
+
+        console.error(
+            "Erro ao carregar pessoas:",
+            erroPessoas
+        );
+
+        container.textContent =
+            "Erro ao carregar pessoas: " +
+            erroPessoas.message;
+
+        return;
+    }
+
+
+    const nomes = {};
+
+    pessoas.forEach(
+        pessoa => {
+            nomes[pessoa.id] =
+                pessoa.nome;
+        }
+    );
+
+
     /* =================================
-       SALDOS LÍQUIDOS
+       CONSOLIDAR SALDOS
     ================================= */
 
     const pares = {};
@@ -1368,6 +1269,14 @@ async function carregarSaldos() {
                     divida.valor
                 );
 
+            if (
+                !devedor ||
+                !credor ||
+                !Number.isFinite(valor)
+            ) {
+                return;
+            }
+
             const ids = [
                 devedor,
                 credor
@@ -1376,9 +1285,8 @@ async function carregarSaldos() {
             );
 
             const chave =
-                ids[0] +
-                "-" +
-                ids[1];
+                `${ids[0]}-${ids[1]}`;
+
 
             if (!pares[chave]) {
 
@@ -1387,8 +1295,8 @@ async function carregarSaldos() {
                     pessoaB: ids[1],
                     saldo: 0
                 };
-
             }
+
 
             if (
                 devedor === ids[0]
@@ -1401,9 +1309,7 @@ async function carregarSaldos() {
 
                 pares[chave].saldo -=
                     valor;
-
             }
-
         }
     );
 
@@ -1422,9 +1328,19 @@ async function carregarSaldos() {
         .forEach(
             par => {
 
+                if (
+                    Math.abs(
+                        par.saldo
+                    ) < 0.005
+                ) {
+                    return;
+                }
+
+
                 let devedor;
                 let credor;
                 let valor;
+
 
                 if (
                     par.saldo > 0
@@ -1439,9 +1355,7 @@ async function carregarSaldos() {
                     valor =
                         par.saldo;
 
-                } else if (
-                    par.saldo < 0
-                ) {
+                } else {
 
                     devedor =
                         par.pessoaB;
@@ -1453,15 +1367,10 @@ async function carregarSaldos() {
                         Math.abs(
                             par.saldo
                         );
-
-                } else {
-
-                    return;
                 }
 
 
-                encontrou =
-                    true;
+                encontrou = true;
 
 
                 const div =
@@ -1472,6 +1381,7 @@ async function carregarSaldos() {
                 div.className =
                     "resumo-item";
 
+
                 div.innerHTML = `
                     <strong>
                         ${escapeHTML(
@@ -1480,11 +1390,8 @@ async function carregarSaldos() {
                         )}
 
                         deve
-
                         ${euro(valor)}
-
                         a
-
                         ${escapeHTML(
                             nomes[credor] ||
                             "Desconhecido"
@@ -1492,21 +1399,19 @@ async function carregarSaldos() {
                     </strong>
                 `;
 
+
                 container.appendChild(
                     div
                 );
-
             }
         );
 
 
     if (!encontrou) {
 
-        container.innerHTML =
+        container.textContent =
             "Não existem saldos pendentes.";
-
     }
-
 }
 
 
@@ -1525,6 +1430,7 @@ async function liquidarDivida(id) {
         return;
     }
 
+
     const {
         error
     } =
@@ -1538,6 +1444,7 @@ async function liquidarDivida(id) {
                 id
             );
 
+
     if (error) {
 
         alert(
@@ -1548,8 +1455,8 @@ async function liquidarDivida(id) {
         return;
     }
 
-    await carregarSaldos();
 
+    await carregarSaldos();
 }
 
 
@@ -1570,6 +1477,7 @@ function exportarJSON() {
             dados.movimentos
     };
 
+
     const blob =
         new Blob(
             [
@@ -1585,11 +1493,11 @@ function exportarJSON() {
             }
         );
 
+
     descarregarBlob(
         blob,
         "gestor-financeiro.json"
     );
-
 }
 
 
@@ -1608,6 +1516,7 @@ function exportarCSV() {
             "Valor"
         ]
     ];
+
 
     dados.movimentos.forEach(
         movimento => {
@@ -1646,8 +1555,7 @@ function exportarCSV() {
     const blob =
         new Blob(
             [
-                "\uFEFF" +
-                csv
+                "\uFEFF" + csv
             ],
             {
                 type:
@@ -1655,107 +1563,13 @@ function exportarCSV() {
             }
         );
 
+
     descarregarBlob(
         blob,
         "gestor-financeiro.csv"
     );
-
 }
 
-
-/* =====================================
-   IMPORTAR JSON
-===================================== */
-
-function importarJSON() {
-
-    const ficheiro =
-        document.getElementById(
-            "importFile"
-        ).files[0];
-
-    if (!ficheiro) {
-
-        alert(
-            "Selecione um ficheiro JSON."
-        );
-
-        return;
-    }
-
-    const reader =
-        new FileReader();
-
-    reader.onload =
-        event => {
-
-            try {
-
-                const backup =
-                    JSON.parse(
-                        event.target.result
-                    );
-
-                if (
-                    !Array.isArray(
-                        backup.movimentos
-                    )
-                ) {
-
-                    throw new Error(
-                        "Formato de backup inválido."
-                    );
-
-                }
-
-                dados = {
-
-                    orcamento:
-                        Number(
-                            backup.orcamento || 0
-                        ),
-
-                    movimentos:
-                        backup.movimentos
-
-                };
-
-                guardarDados();
-
-                const campo =
-                    document.getElementById(
-                        "orcamentoMensal"
-                    );
-
-                if (campo) {
-
-                    campo.value =
-                        dados.orcamento || "";
-
-                }
-
-                atualizarTudo();
-
-                alert(
-                    "Backup importado com sucesso."
-                );
-
-            } catch (erro) {
-
-                alert(
-                    "Não foi possível importar o backup:\n\n" +
-                    erro.message
-                );
-
-            }
-
-        };
-
-    reader.readAsText(
-        ficheiro
-    );
-
-}
 
 function descarregarBlob(
     blob,
@@ -1785,7 +1599,106 @@ function descarregarBlob(
     URL.revokeObjectURL(
         url
     );
+}
 
+
+/* =====================================
+   IMPORTAR JSON
+===================================== */
+
+function importarJSON() {
+
+    const ficheiro =
+        document.getElementById(
+            "importFile"
+        )?.files[0];
+
+    if (!ficheiro) {
+
+        alert(
+            "Selecione um ficheiro JSON."
+        );
+
+        return;
+    }
+
+
+    const reader =
+        new FileReader();
+
+
+    reader.onload =
+        event => {
+
+            try {
+
+                const backup =
+                    JSON.parse(
+                        event.target.result
+                    );
+
+
+                if (
+                    !Array.isArray(
+                        backup.movimentos
+                    )
+                ) {
+
+                    throw new Error(
+                        "Formato de backup inválido."
+                    );
+                }
+
+
+                dados = {
+
+                    orcamento:
+                        Number(
+                            backup.orcamento || 0
+                        ),
+
+                    movimentos:
+                        backup.movimentos
+                };
+
+
+                guardarDados();
+
+
+                const campo =
+                    document.getElementById(
+                        "orcamentoMensal"
+                    );
+
+
+                if (campo) {
+
+                    campo.value =
+                        dados.orcamento || "";
+                }
+
+
+                atualizarTudo();
+
+
+                alert(
+                    "Backup importado com sucesso."
+                );
+
+            } catch (erro) {
+
+                alert(
+                    "Não foi possível importar o backup:\n\n" +
+                    erro.message
+                );
+            }
+
+        };
+
+
+    reader.readAsText(
+        ficheiro
+    );
 }
 
 
@@ -1806,7 +1719,6 @@ function atualizarTudo() {
     atualizarResumoCategorias();
 
     atualizarGrafico();
-
 }
 
 
@@ -1818,17 +1730,25 @@ async function iniciarAplicacao() {
 
     prepararDatas();
 
+
     const orcamento =
-        document.getElementById("orcamentoMensal");
+        document.getElementById(
+            "orcamentoMensal"
+        );
+
 
     if (orcamento) {
+
         orcamento.value =
             dados.orcamento || "";
     }
 
+
     configurarFiltros();
 
+
     atualizarTudo();
+
 
     await carregarPessoasDividas();
 

@@ -2279,10 +2279,6 @@ async function iniciarAplicacao() {
 
     await carregarPagadores();
 
-    await mostrarResumoFecho(
-        obterMesAtual()
-    );
-
     await atualizarTudo();
 
 }

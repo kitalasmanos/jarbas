@@ -42,7 +42,87 @@
 </header>
 
 
-<main class="container">
+<!-- =====================================
+     LOGIN
+====================================== -->
+
+<section
+    id="loginCard"
+    class="card container"
+>
+
+    <h2>🔐 Entrar</h2>
+
+    <p class="section-help">
+        Introduza o email e a palavra-passe para entrar.
+    </p>
+
+
+    <div class="form-grid">
+
+        <div>
+
+            <label for="loginEmail">
+                Email
+            </label>
+
+            <input
+                id="loginEmail"
+                type="email"
+                placeholder="email@exemplo.com"
+                autocomplete="email"
+            >
+
+        </div>
+
+
+        <div>
+
+            <label for="loginPassword">
+                Palavra-passe
+            </label>
+
+            <input
+                id="loginPassword"
+                type="password"
+                placeholder="Palavra-passe"
+                autocomplete="current-password"
+            >
+
+        </div>
+
+
+        <div class="form-button">
+
+            <button
+                type="button"
+                onclick="fazerLogin()"
+            >
+                Entrar
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <p
+        id="loginErro"
+        style="color: #dc2626; margin-top: 12px;"
+    ></p>
+
+</section>
+
+
+<!-- =====================================
+     APLICAÇÃO
+====================================== -->
+
+<main
+    id="appContainer"
+    class="container"
+    style="display: none;"
+>
 
 
     <!-- =====================================
@@ -473,14 +553,27 @@
 </footer>
 
 
+<!-- =====================================
+     BIBLIOTECAS
+===================================== -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+<!-- =====================================
+     CONFIGURAÇÃO
+===================================== -->
 
 <script src="supabase.js"></script>
 
 <script src="app.js"></script>
 
+
+<!-- =====================================
+     SERVICE WORKER
+===================================== -->
 
 <script>
 

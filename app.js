@@ -1,17 +1,16 @@
 /* =====================================
-   GESTOR FINANCEIRO 2.0
+   GESTOR FINANCEIRO 50/50
 ===================================== */
 
-const STORAGE_KEY = "gestor-financeiro-v2";
+const STORAGE_KEY = "gestor-financeiro-50-50";
 
 let dados = JSON.parse(
     localStorage.getItem(STORAGE_KEY)
 ) || {
-    orcamento: 0,
     movimentos: []
 };
 
-let graficoCategorias = null;
+let grafico = null;
 
 
 /* =====================================
@@ -19,876 +18,68 @@ let graficoCategorias = null;
 ===================================== */
 
 function guardarDados() {
+
     localStorage.setItem(
         STORAGE_KEY,
         JSON.stringify(dados)
     );
+
 }
 
 
 function euro(valor) {
-    return Number(valor || 0).toLocaleString(
+
+    return Number(
+        valor || 0
+    ).toLocaleString(
         "pt-PT",
         {
             style: "currency",
             currency: "EUR"
         }
     );
+
 }
 
 
 function hojeISO() {
+
     return new Date()
         .toISOString()
         .split("T")[0];
+
 }
 
 
 function escapeHTML(valor) {
+
     return String(valor)
         .replaceAll("&", "&amp;")
         .replaceAll("<", "&lt;")
         .replaceAll(">", "&gt;")
         .replaceAll('"', "&quot;")
         .replaceAll("'", "&#039;");
+
 }
 
 
 /* =====================================
-   DASHBOARD
+   PESSOAS
 ===================================== */
 
-function calcularTotais() {
-
-    let receitas = 0;
-    let despesas = 0;
-
-    dados.movimentos.forEach(movimento => {
-
-        if (movimento.tipo === "receita") {
-            receitas += Number(movimento.valor);
-        } else {
-            despesas += Number(movimento.valor);
-        }
-
-    });
-
-    return {
-        receitas,
-        despesas,
-        saldo: receitas - despesas
-    };
-}
-
-
-function atualizarDashboard() {
-
-    const totais = calcularTotais();
-
-    const saldo =
-        document.getElementById("saldoAtual");
-
-    const receitas =
-        document.getElementById("totalReceitas");
-
-    const despesas =
-        document.getElementById("totalDespesas");
-
-    const restante =
-        document.getElementById("orcamentoRestante");
-
-    if (saldo) {
-        saldo.textContent = euro(totais.saldo);
-    }
-
-    if (receitas) {
-        receitas.textContent = euro(totais.receitas);
-    }
-
-    if (despesas) {
-        despesas.textContent = euro(totais.despesas);
-    }
-
-    if (restante) {
-        restante.textContent =
-            euro(
-                dados.orcamento -
-                totais.despesas
-            );
-    }
-}
-
-
-/* =====================================
-   DATAS
-===================================== */
-
-function prepararDatas() {
-
-    const dataMovimento =
-        document.getElementById(
-            "dataMovimento"
-        );
-
-    const dataDivida =
-        document.getElementById(
-            "dataDivida"
-        );
-
-    if (
-        dataMovimento &&
-        !dataMovimento.value
-    ) {
-        dataMovimento.value = hojeISO();
-    }
-
-    if (
-        dataDivida &&
-        !dataDivida.value
-    ) {
-        dataDivida.value = hojeISO();
-    }
-}
-
-
-/* =====================================
-   MOVIMENTOS
-===================================== */
-
-function adicionarMovimento() {
-
-    const tipo =
-        document.getElementById("tipo")?.value;
-
-    const categoria =
-        document.getElementById("categoria")?.value;
-
-    const descricao =
-        document
-            .getElementById("descricao")
-            ?.value
-            .trim();
-
-    const valor =
-        Number(
-            document.getElementById("valor")?.value
-        );
-
-    const data =
-        document.getElementById(
-            "dataMovimento"
-        )?.value;
-
-    if (!descricao) {
-        alert("Introduza uma descrição.");
-        return;
-    }
-
-    if (
-        !Number.isFinite(valor) ||
-        valor <= 0
-    ) {
-        alert("Introduza um valor válido.");
-        return;
-    }
-
-    if (!data) {
-        alert("Selecione uma data.");
-        return;
-    }
-
-    dados.movimentos.push({
-        id: Date.now(),
-        tipo,
-        categoria,
-        descricao,
-        valor,
-        data
-    });
-
-    guardarDados();
-
-    document.getElementById(
-        "descricao"
-    ).value = "";
-
-    document.getElementById(
-        "valor"
-    ).value = "";
-
-    atualizarTudo();
-}
-
-
-function editarMovimento(id) {
-
-    const movimento =
-        dados.movimentos.find(
-            item => item.id === id
-        );
-
-    if (!movimento) {
-        return;
-    }
-
-    const descricao =
-        prompt(
-            "Descrição:",
-            movimento.descricao
-        );
-
-    if (descricao === null) {
-        return;
-    }
-
-    const valor =
-        Number(
-            prompt(
-                "Valor (€):",
-                movimento.valor
-            )
-        );
-
-    if (
-        !Number.isFinite(valor) ||
-        valor <= 0
-    ) {
-        alert("Valor inválido.");
-        return;
-    }
-
-    movimento.descricao =
-        descricao.trim() ||
-        movimento.descricao;
-
-    movimento.valor =
-        valor;
-
-    guardarDados();
-
-    atualizarTudo();
-}
-
-
-function apagarMovimento(id) {
-
-    const confirmar =
-        confirm(
-            "Pretende eliminar este movimento?"
-        );
-
-    if (!confirmar) {
-        return;
-    }
-
-    dados.movimentos =
-        dados.movimentos.filter(
-            item => item.id !== id
-        );
-
-    guardarDados();
-
-    atualizarTudo();
-}
-
-
-/* =====================================
-   FILTROS
-===================================== */
-
-function obterMovimentosFiltrados() {
-
-    const pesquisa =
-        (
-            document.getElementById(
-                "pesquisa"
-            )?.value || ""
-        )
-        .trim()
-        .toLowerCase();
-
-    const categoria =
-        document.getElementById(
-            "filtroCategoria"
-        )?.value || "";
-
-    const mes =
-        document.getElementById(
-            "filtroMes"
-        )?.value || "";
-
-    return dados.movimentos.filter(
-        movimento => {
-
-            const correspondePesquisa =
-                !pesquisa ||
-                String(movimento.descricao)
-                    .toLowerCase()
-                    .includes(pesquisa);
-
-            const correspondeCategoria =
-                !categoria ||
-                movimento.categoria === categoria;
-
-            const correspondeMes =
-                !mes ||
-                String(movimento.data)
-                    .startsWith(mes);
-
-            return (
-                correspondePesquisa &&
-                correspondeCategoria &&
-                correspondeMes
-            );
-        }
-    );
-}
-
-
-function atualizarFiltroCategorias() {
+async function carregarPessoas() {
 
     const select =
         document.getElementById(
-            "filtroCategoria"
+            "pagador"
         );
 
     if (!select) {
-        return;
+        return [];
     }
-
-    const valorAtual =
-        select.value;
-
-    const categorias = [
-        ...new Set(
-            dados.movimentos.map(
-                movimento =>
-                    movimento.categoria
-            )
-        )
-    ].sort();
 
     select.innerHTML =
-        '<option value="">Todas</option>';
-
-    categorias.forEach(
-        categoria => {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-            option.value =
-                categoria;
-
-            option.textContent =
-                categoria;
-
-            select.appendChild(option);
-        }
-    );
-
-    if (
-        categorias.includes(
-            valorAtual
-        )
-    ) {
-        select.value = valorAtual;
-    }
-}
-
-
-function configurarFiltros() {
-
-    const pesquisa =
-        document.getElementById(
-            "pesquisa"
-        );
-
-    const categoria =
-        document.getElementById(
-            "filtroCategoria"
-        );
-
-    const mes =
-        document.getElementById(
-            "filtroMes"
-        );
-
-    if (pesquisa) {
-        pesquisa.addEventListener(
-            "input",
-            atualizarTudo
-        );
-    }
-
-    if (categoria) {
-        categoria.addEventListener(
-            "change",
-            atualizarTudo
-        );
-    }
-
-    if (mes) {
-        mes.addEventListener(
-            "change",
-            atualizarTudo
-        );
-    }
-}
-
-
-function limparFiltros() {
-
-    const pesquisa =
-        document.getElementById(
-            "pesquisa"
-        );
-
-    const categoria =
-        document.getElementById(
-            "filtroCategoria"
-        );
-
-    const mes =
-        document.getElementById(
-            "filtroMes"
-        );
-
-    if (pesquisa) {
-        pesquisa.value = "";
-    }
-
-    if (categoria) {
-        categoria.value = "";
-    }
-
-    if (mes) {
-        mes.value = "";
-    }
-
-    atualizarTudo();
-}
-
-
-/* =====================================
-   HISTÓRICO
-===================================== */
-
-function renderTabela() {
-
-    const tbody =
-        document.getElementById(
-            "tabelaMovimentos"
-        );
-
-    if (!tbody) {
-        return;
-    }
-
-    const movimentos =
-        obterMovimentosFiltrados()
-            .slice()
-            .sort(
-                (a, b) =>
-                    String(b.data)
-                        .localeCompare(
-                            String(a.data)
-                        )
-            );
-
-    tbody.innerHTML = "";
-
-    if (
-        movimentos.length === 0
-    ) {
-
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6">
-                    Não existem movimentos.
-                </td>
-            </tr>
-        `;
-
-        return;
-    }
-
-    movimentos.forEach(
-        movimento => {
-
-            const tr =
-                document.createElement(
-                    "tr"
-                );
-
-            const sinal =
-                movimento.tipo === "receita"
-                    ? "+"
-                    : "-";
-
-            tr.innerHTML = `
-                <td>
-                    ${escapeHTML(
-                        movimento.data
-                    )}
-                </td>
-
-                <td>
-                    ${
-                        movimento.tipo === "receita"
-                            ? "Receita"
-                            : "Despesa"
-                    }
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        movimento.categoria
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        movimento.descricao
-                    )}
-                </td>
-
-                <td class="${
-                    movimento.tipo === "receita"
-                        ? "receita-text"
-                        : "despesa-text"
-                }">
-                    ${sinal}${euro(
-                        movimento.valor
-                    )}
-                </td>
-
-                <td>
-
-                    <button
-                        type="button"
-                        onclick="editarMovimento(${movimento.id})">
-                        Editar
-                    </button>
-
-                    <button
-                        type="button"
-                        onclick="apagarMovimento(${movimento.id})">
-                        Apagar
-                    </button>
-
-                </td>
-            `;
-
-            tbody.appendChild(tr);
-        }
-    );
-}
-
-
-/* =====================================
-   ORÇAMENTO
-===================================== */
-
-function guardarOrcamento() {
-
-    const valor =
-        Number(
-            document.getElementById(
-                "orcamentoMensal"
-            )?.value
-        );
-
-    if (
-        !Number.isFinite(valor) ||
-        valor < 0
-    ) {
-        alert(
-            "Introduza um orçamento válido."
-        );
-        return;
-    }
-
-    dados.orcamento = valor;
-
-    guardarDados();
-
-    atualizarOrcamento();
-    atualizarDashboard();
-
-    alert(
-        "Orçamento guardado."
-    );
-}
-
-
-function atualizarOrcamento() {
-
-    const barra =
-        document.getElementById(
-            "progressBar"
-        );
-
-    const texto =
-        document.getElementById(
-            "percentagemOrcamento"
-        );
-
-    if (!barra || !texto) {
-        return;
-    }
-
-    const despesas =
-        calcularTotais().despesas;
-
-    if (
-        dados.orcamento <= 0
-    ) {
-
-        barra.style.width = "0%";
-
-        barra.style.background =
-            "#16a34a";
-
-        texto.textContent =
-            "Sem orçamento definido";
-
-        return;
-    }
-
-    const percentagem =
-        Math.min(
-            (
-                despesas /
-                dados.orcamento
-            ) * 100,
-            100
-        );
-
-    barra.style.width =
-        percentagem + "%";
-
-    if (percentagem < 75) {
-
-        barra.style.background =
-            "#16a34a";
-
-    } else if (percentagem < 90) {
-
-        barra.style.background =
-            "#f59e0b";
-
-    } else {
-
-        barra.style.background =
-            "#dc2626";
-    }
-
-    texto.textContent =
-        percentagem.toFixed(1) +
-        "% utilizado";
-}
-
-
-/* =====================================
-   RESUMO POR CATEGORIA
-===================================== */
-
-function atualizarResumoCategorias() {
-
-    const container =
-        document.getElementById(
-            "resumoCategorias"
-        );
-
-    if (!container) {
-        return;
-    }
-
-    const resumo = {};
-
-    obterMovimentosFiltrados()
-        .forEach(movimento => {
-
-            if (
-                movimento.tipo !== "despesa"
-            ) {
-                return;
-            }
-
-            resumo[movimento.categoria] =
-                (
-                    resumo[
-                        movimento.categoria
-                    ] || 0
-                ) +
-                Number(
-                    movimento.valor
-                );
-        });
-
-    const categorias =
-        Object.entries(resumo)
-            .sort(
-                (a, b) =>
-                    b[1] - a[1]
-            );
-
-    if (
-        categorias.length === 0
-    ) {
-
-        container.textContent =
-            "Sem despesas registadas.";
-
-        return;
-    }
-
-    container.innerHTML = "";
-
-    categorias.forEach(
-        ([categoria, valor]) => {
-
-            const div =
-                document.createElement(
-                    "div"
-                );
-
-            div.className =
-                "resumo-item";
-
-            div.innerHTML = `
-                <strong>
-                    ${escapeHTML(categoria)}
-                </strong>
-
-                —
-                ${euro(valor)}
-            `;
-
-            container.appendChild(div);
-        }
-    );
-}
-
-
-/* =====================================
-   GRÁFICO
-===================================== */
-
-function atualizarGrafico() {
-
-    const canvas =
-        document.getElementById(
-            "graficoCategorias"
-        );
-
-    if (
-        !canvas ||
-        typeof Chart === "undefined"
-    ) {
-        return;
-    }
-
-    const resumo = {};
-
-    obterMovimentosFiltrados()
-        .forEach(movimento => {
-
-            if (
-                movimento.tipo !== "despesa"
-            ) {
-                return;
-            }
-
-            resumo[movimento.categoria] =
-                (
-                    resumo[
-                        movimento.categoria
-                    ] || 0
-                ) +
-                Number(
-                    movimento.valor
-                );
-        });
-
-    const labels =
-        Object.keys(resumo);
-
-    const valores =
-        Object.values(resumo);
-
-    if (graficoCategorias) {
-        graficoCategorias.destroy();
-        graficoCategorias = null;
-    }
-
-    if (
-        labels.length === 0
-    ) {
-        return;
-    }
-
-    graficoCategorias =
-        new Chart(
-            canvas.getContext("2d"),
-            {
-                type: "pie",
-
-                data: {
-                    labels,
-
-                    datasets: [
-                        {
-                            data: valores
-                        }
-                    ]
-                },
-
-                options: {
-                    responsive: true,
-
-                    plugins: {
-                        legend: {
-                            position: "bottom"
-                        }
-                    }
-                }
-            }
-        );
-}
-
-
-/* =====================================
-   SUPABASE — PESSOAS
-===================================== */
-
-async function carregarPessoasDividas() {
-
-    const pagador =
-        document.getElementById(
-            "pagadorDivida"
-        );
-
-    const devedor =
-        document.getElementById(
-            "devedorDivida"
-        );
-
-    if (
-        !pagador ||
-        !devedor
-    ) {
-        return;
-    }
-
-    pagador.innerHTML =
-        '<option value="">A carregar pessoas...</option>';
-
-    devedor.innerHTML =
-        '<option value="">A carregar pessoas...</option>';
+        '<option value="">A carregar...</option>';
 
     const {
         data,
@@ -902,152 +93,226 @@ async function carregarPessoasDividas() {
     if (error) {
 
         console.error(
-            "Erro ao carregar pessoas:",
             error
         );
 
-        pagador.innerHTML =
+        select.innerHTML =
             '<option value="">Erro ao carregar</option>';
 
-        devedor.innerHTML =
-            '<option value="">Erro ao carregar</option>';
+        return [];
 
-        return;
     }
 
-    pagador.innerHTML =
-        '<option value="">Selecionar pessoa</option>';
-
-    devedor.innerHTML =
+    select.innerHTML =
         '<option value="">Selecionar pessoa</option>';
 
     data.forEach(
         pessoa => {
 
-            pagador.innerHTML += `
-                <option value="${pessoa.id}">
-                    ${escapeHTML(
-                        pessoa.nome
-                    )}
-                </option>
-            `;
+            const option =
+                document.createElement(
+                    "option"
+                );
 
-            devedor.innerHTML += `
-                <option value="${pessoa.id}">
-                    ${escapeHTML(
-                        pessoa.nome
-                    )}
-                </option>
-            `;
+            option.value =
+                pessoa.id;
+
+            option.textContent =
+                pessoa.nome;
+
+            select.appendChild(
+                option
+            );
+
         }
     );
+
+    return data;
+
 }
 
 
 /* =====================================
-   REGISTAR DESPESA + DÍVIDA
+   PAGADOR → OUTRA PESSOA
 ===================================== */
 
-async function registarDivida() {
+function obterOutroId(
+    pessoas,
+    pagadorId
+) {
+
+    const pessoa =
+        pessoas.find(
+            p =>
+                Number(p.id) ===
+                Number(pagadorId)
+        );
+
+    if (!pessoa) {
+        return null;
+    }
+
+    const outraPessoa =
+        pessoas.find(
+            p =>
+                Number(p.id) !==
+                Number(pagadorId)
+        );
+
+    return outraPessoa
+        ? Number(outraPessoa.id)
+        : null;
+
+}
+
+
+/* =====================================
+   REGISTAR DESPESA
+===================================== */
+
+async function registarDespesa() {
+
+    const descricao =
+        document.getElementById(
+            "descricao"
+        ).value.trim();
+
+    const categoria =
+        document.getElementById(
+            "categoria"
+        ).value;
+
+    const valor =
+        Number(
+            document.getElementById(
+                "valor"
+            ).value
+        );
 
     const pagadorId =
         Number(
             document.getElementById(
-                "pagadorDivida"
-            )?.value
-        );
-
-    const devedorId =
-        Number(
-            document.getElementById(
-                "devedorDivida"
-            )?.value
-        );
-
-    const descricao =
-        document
-            .getElementById(
-                "descricaoDivida"
-            )
-            ?.value
-            .trim();
-
-    const valorTotal =
-        Number(
-            document.getElementById(
-                "valorTotalDivida"
-            )?.value
-        );
-
-    const valorDevido =
-        Number(
-            document.getElementById(
-                "valorDevido"
-            )?.value
+                "pagador"
+            ).value
         );
 
     const data =
         document.getElementById(
-            "dataDivida"
-        )?.value;
+            "dataDespesa"
+        ).value;
 
-    if (
-        !pagadorId ||
-        !devedorId
-    ) {
-        alert(
-            "Selecione quem pagou e quem deve."
-        );
-        return;
-    }
-
-    if (
-        pagadorId === devedorId
-    ) {
-        alert(
-            "Quem pagou e quem deve têm de ser pessoas diferentes."
-        );
-        return;
-    }
 
     if (!descricao) {
+
         alert(
             "Introduza uma descrição."
         );
+
         return;
     }
 
+
     if (
-        !Number.isFinite(valorTotal) ||
-        valorTotal <= 0
+        !Number.isFinite(valor) ||
+        valor <= 0
     ) {
+
         alert(
-            "Introduza um valor total válido."
+            "Introduza um valor válido."
         );
+
         return;
     }
 
-    if (
-        !Number.isFinite(valorDevido) ||
-        valorDevido <= 0 ||
-        valorDevido > valorTotal
-    ) {
+
+    if (!pagadorId) {
+
         alert(
-            "O valor devido tem de ser maior que 0 e não pode ultrapassar o valor total."
+            "Selecione quem pagou."
         );
+
         return;
     }
+
 
     if (!data) {
+
         alert(
             "Selecione uma data."
         );
+
         return;
     }
 
 
     /* =================================
-       DESPESA PARTILHADA
+       CARREGAR AS PESSOAS
+    ================================= */
+
+    const {
+        data: pessoas,
+        error: erroPessoas
+    } =
+        await supabaseClient
+            .from("pessoas")
+            .select("id, nome")
+            .order("nome");
+
+
+    if (erroPessoas) {
+
+        alert(
+            "Erro ao carregar pessoas:\n" +
+            erroPessoas.message
+        );
+
+        return;
+    }
+
+
+    if (
+        pessoas.length !== 2
+    ) {
+
+        alert(
+            "O sistema 50/50 precisa de exatamente 2 pessoas."
+        );
+
+        return;
+    }
+
+
+    const devedorId =
+        obterOutroId(
+            pessoas,
+            pagadorId
+        );
+
+
+    if (!devedorId) {
+
+        alert(
+            "Não foi possível determinar a outra pessoa."
+        );
+
+        return;
+    }
+
+
+    /* =================================
+       CALCULAR METADE
+    ================================= */
+
+    const valorDevido =
+        Math.round(
+            (
+                valor / 2
+            ) * 100
+        ) / 100;
+
+
+    /* =================================
+       CRIAR DESPESA PARTILHADA
     ================================= */
 
     const {
@@ -1060,14 +325,22 @@ async function registarDivida() {
             )
             .insert([
                 {
-                    descricao: descricao,
-                    valor: valorTotal,
-                    pagador_id: pagadorId,
-                    data: data
+                    descricao:
+                        descricao,
+
+                    valor:
+                        valor,
+
+                    pagador_id:
+                        pagadorId,
+
+                    data:
+                        data
                 }
             ])
             .select("id")
             .single();
+
 
     if (erroDespesa) {
 
@@ -1085,7 +358,7 @@ async function registarDivida() {
 
 
     /* =================================
-       DÍVIDA
+       CRIAR DÍVIDA 50/50
     ================================= */
 
     const {
@@ -1107,10 +380,14 @@ async function registarDivida() {
                     valor:
                         valorDevido,
 
+                    valor_pago:
+                        0,
+
                     liquidado:
                         false
                 }
             ]);
+
 
     if (erroDivida) {
 
@@ -1128,46 +405,470 @@ async function registarDivida() {
 
 
     /* =================================
-       LIMPAR
+       LIMPAR FORMULÁRIO
     ================================= */
 
     document.getElementById(
-        "descricaoDivida"
+        "descricao"
     ).value = "";
 
     document.getElementById(
-        "valorTotalDivida"
+        "valor"
     ).value = "";
 
-    document.getElementById(
-        "valorDevido"
-    ).value = "";
 
     alert(
-        "Dívida registada com sucesso!"
+        "Despesa registada com sucesso!"
     );
 
-    await carregarSaldos();
+
+    await atualizarTudo();
+
+
 }
 
 
 /* =====================================
-   SALDOS
+   HISTÓRICO
 ===================================== */
 
-async function carregarSaldos() {
+async function carregarDespesas() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from(
+                "despesas_partilhadas"
+            )
+            .select(
+                "id, descricao, valor, pagador_id, data"
+            )
+            .order(
+                "data",
+                {
+                    ascending: false
+                }
+            );
+
+
+    if (error) {
+
+        console.error(
+            error
+        );
+
+        return [];
+
+    }
+
+    return data || [];
+
+}
+
+
+async function carregarNomesPessoas() {
+
+    const {
+        data,
+        error
+    } =
+        await supabaseClient
+            .from(
+                "pessoas"
+            )
+            .select(
+                "id, nome"
+            );
+
+
+    if (error) {
+
+        console.error(
+            error
+        );
+
+        return {};
+
+    }
+
+
+    const nomes = {};
+
+    data.forEach(
+        pessoa => {
+
+            nomes[pessoa.id] =
+                pessoa.nome;
+
+        }
+    );
+
+    return nomes;
+
+}
+
+
+/* =====================================
+   FILTROS
+===================================== */
+
+function obterFiltroPesquisa() {
+
+    return (
+        document.getElementById(
+            "pesquisa"
+        )?.value ||
+        ""
+    )
+        .trim()
+        .toLowerCase();
+
+}
+
+
+function obterFiltroCategoria() {
+
+    return (
+        document.getElementById(
+            "filtroCategoria"
+        )?.value ||
+        ""
+    );
+
+}
+
+
+function obterFiltroMes() {
+
+    return (
+        document.getElementById(
+            "filtroMes"
+        )?.value ||
+        ""
+    );
+
+}
+
+
+function filtrarDespesas(
+    despesas,
+    nomes
+) {
+
+    const pesquisa =
+        obterFiltroPesquisa();
+
+    const categoria =
+        obterFiltroCategoria();
+
+    const mes =
+        obterFiltroMes();
+
+
+    /*
+       A categoria está guardada
+       apenas no histórico local.
+    */
+
+    return despesas.filter(
+        despesa => {
+
+            const correspondePesquisa =
+                !pesquisa ||
+                despesa.descricao
+                    .toLowerCase()
+                    .includes(
+                        pesquisa
+                    );
+
+
+            const movimento =
+                dados.movimentos.find(
+                    item =>
+                        item.supabase_id ===
+                        despesa.id
+                );
+
+
+            const correspondeCategoria =
+                !categoria ||
+                (
+                    movimento &&
+                    movimento.categoria ===
+                    categoria
+                );
+
+
+            const correspondeMes =
+                !mes ||
+                String(
+                    despesa.data
+                ).startsWith(
+                    mes
+                );
+
+
+            return (
+                correspondePesquisa &&
+                correspondeCategoria &&
+                correspondeMes
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================
+   HISTÓRICO
+===================================== */
+
+async function renderTabela() {
+
+    const tbody =
+        document.getElementById(
+            "tabelaDespesas"
+        );
+
+
+    if (!tbody) {
+        return;
+    }
+
+
+    const despesas =
+        await carregarDespesas();
+
+    const nomes =
+        await carregarNomesPessoas();
+
+
+    atualizarCategoriasFiltro(
+        despesas
+    );
+
+
+    const filtradas =
+        filtrarDespesas(
+            despesas,
+            nomes
+        );
+
+
+    tbody.innerHTML = "";
+
+
+    if (
+        filtradas.length === 0
+    ) {
+
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6">
+                    Não existem despesas.
+                </td>
+            </tr>
+        `;
+
+        return;
+    }
+
+
+    filtradas.forEach(
+        despesa => {
+
+            const tr =
+                document.createElement(
+                    "tr"
+                );
+
+
+            const pagador =
+                nomes[
+                    despesa.pagador_id
+                ] ||
+                "Desconhecido";
+
+
+            /*
+               A despesa é sempre 50/50.
+            */
+
+            const metade =
+                Number(
+                    despesa.valor
+                ) / 2;
+
+
+            tr.innerHTML = `
+                <td>
+                    ${escapeHTML(
+                        despesa.data
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        despesa.descricao
+                    )}
+                </td>
+
+                <td>
+                    ${
+                        obterCategoriaDespesa(
+                            despesa.id
+                        )
+                    }
+                </td>
+
+                <td>
+                    ${euro(
+                        despesa.valor
+                    )}
+                </td>
+
+                <td>
+                    ${escapeHTML(
+                        pagador
+                    )}
+                </td>
+
+                <td>
+                    ${euro(
+                        metade
+                    )}
+                </td>
+            `;
+
+
+            tbody.appendChild(
+                tr
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================
+   CATEGORIAS
+===================================== */
+
+function obterCategoriaDespesa(
+    id
+) {
+
+    const movimento =
+        dados.movimentos.find(
+            item =>
+                item.supabase_id ===
+                id
+        );
+
+    return movimento
+        ? escapeHTML(
+            movimento.categoria
+        )
+        : "Outros";
+
+}
+
+
+function atualizarCategoriasFiltro(
+    despesas
+) {
+
+    const select =
+        document.getElementById(
+            "filtroCategoria"
+        );
+
+    if (!select) {
+        return;
+    }
+
+
+    const atual =
+        select.value;
+
+
+    const categorias =
+        [
+            ...new Set(
+                despesas.map(
+                    despesa =>
+                        obterCategoriaDespesa(
+                            despesa.id
+                        )
+                )
+            )
+        ]
+        .sort();
+
+
+    select.innerHTML =
+        '<option value="">Todas</option>';
+
+
+    categorias.forEach(
+        categoria => {
+
+            const option =
+                document.createElement(
+                    "option"
+                );
+
+            option.value =
+                categoria;
+
+            option.textContent =
+                categoria;
+
+            select.appendChild(
+                option
+            );
+
+        }
+    );
+
+
+    if (
+        categorias.includes(
+            atual
+        )
+    ) {
+
+        select.value =
+            atual;
+
+    }
+
+}
+
+
+/* =====================================
+   SALDO LÍQUIDO
+===================================== */
+
+async function atualizarSaldo() {
 
     const container =
         document.getElementById(
-            "listaDividas"
+            "saldoPessoas"
         );
+
 
     if (!container) {
         return;
     }
 
+
     container.textContent =
-        "A carregar saldos...";
+        "A carregar saldo...";
 
 
     const {
@@ -1177,78 +878,33 @@ async function carregarSaldos() {
         await supabaseClient
             .from("dividas")
             .select(
-                "id, valor, liquidado, devedor_id, credor_id"
+                "id, valor, valor_pago, liquidado, devedor_id, credor_id"
             )
             .eq(
                 "liquidado",
                 false
             );
 
+
     if (erroDividas) {
 
         console.error(
-            "Erro ao carregar dívidas:",
             erroDividas
         );
 
         container.textContent =
-            "Erro ao carregar saldos: " +
+            "Erro ao carregar saldo: " +
             erroDividas.message;
 
         return;
     }
 
 
-    if (
-        !dividas ||
-        dividas.length === 0
-    ) {
-
-        container.textContent =
-            "Não existem saldos pendentes.";
-
-        return;
-    }
+    const nomes =
+        await carregarNomesPessoas();
 
 
-    const {
-        data: pessoas,
-        error: erroPessoas
-    } =
-        await supabaseClient
-            .from("pessoas")
-            .select("id, nome");
-
-    if (erroPessoas) {
-
-        console.error(
-            "Erro ao carregar pessoas:",
-            erroPessoas
-        );
-
-        container.textContent =
-            "Erro ao carregar pessoas: " +
-            erroPessoas.message;
-
-        return;
-    }
-
-
-    const nomes = {};
-
-    pessoas.forEach(
-        pessoa => {
-            nomes[pessoa.id] =
-                pessoa.nome;
-        }
-    );
-
-
-    /* =================================
-       CONSOLIDAR SALDOS
-    ================================= */
-
-    const pares = {};
+    const saldos = {};
 
 
     dividas.forEach(
@@ -1264,191 +920,289 @@ async function carregarSaldos() {
                     divida.credor_id
                 );
 
-            const valor =
-                Number(
-                    divida.valor
+            const emFalta =
+                Math.max(
+                    0,
+                    Number(
+                        divida.valor
+                    ) -
+                    Number(
+                        divida.valor_pago ||
+                        0
+                    )
                 );
 
+
             if (
-                !devedor ||
-                !credor ||
-                !Number.isFinite(valor)
+                emFalta <= 0
             ) {
                 return;
             }
+
+
+            /*
+               Chave independente da direção.
+            */
 
             const ids = [
                 devedor,
                 credor
             ].sort(
-                (a, b) => a - b
+                (a, b) =>
+                    a - b
             );
+
 
             const chave =
                 `${ids[0]}-${ids[1]}`;
 
 
-            if (!pares[chave]) {
+            if (
+                !saldos[chave]
+            ) {
 
-                pares[chave] = {
-                    pessoaA: ids[0],
-                    pessoaB: ids[1],
-                    saldo: 0
+                saldos[chave] = {
+                    pessoaA:
+                        ids[0],
+
+                    pessoaB:
+                        ids[1],
+
+                    saldo:
+                        0
                 };
+
             }
 
 
             if (
-                devedor === ids[0]
+                devedor ===
+                ids[0]
             ) {
 
-                pares[chave].saldo +=
-                    valor;
+                saldos[chave].saldo +=
+                    emFalta;
 
             } else {
 
-                pares[chave].saldo -=
-                    valor;
+                saldos[chave].saldo -=
+                    emFalta;
+
             }
+
         }
     );
 
 
-    /* =================================
-       MOSTRAR SALDOS
-    ================================= */
-
-    container.innerHTML = "";
-
-    let encontrou =
-        false;
-
-
-    Object.values(pares)
-        .forEach(
-            par => {
-
-                if (
-                    Math.abs(
-                        par.saldo
-                    ) < 0.005
-                ) {
-                    return;
-                }
-
-
-                let devedor;
-                let credor;
-                let valor;
-
-
-                if (
-                    par.saldo > 0
-                ) {
-
-                    devedor =
-                        par.pessoaA;
-
-                    credor =
-                        par.pessoaB;
-
-                    valor =
-                        par.saldo;
-
-                } else {
-
-                    devedor =
-                        par.pessoaB;
-
-                    credor =
-                        par.pessoaA;
-
-                    valor =
-                        Math.abs(
-                            par.saldo
-                        );
-                }
-
-
-                encontrou = true;
-
-
-                const div =
-                    document.createElement(
-                        "div"
-                    );
-
-                div.className =
-                    "resumo-item";
-
-
-                div.innerHTML = `
-                    <strong>
-                        ${escapeHTML(
-                            nomes[devedor] ||
-                            "Desconhecido"
-                        )}
-
-                        deve
-                        ${euro(valor)}
-                        a
-                        ${escapeHTML(
-                            nomes[credor] ||
-                            "Desconhecido"
-                        )}
-                    </strong>
-                `;
-
-
-                container.appendChild(
-                    div
-                );
-            }
+    const pares =
+        Object.values(
+            saldos
+        )
+        .filter(
+            par =>
+                Math.abs(
+                    par.saldo
+                ) > 0.004
         );
 
 
-    if (!encontrou) {
+    if (
+        pares.length === 0
+    ) {
 
-        container.textContent =
-            "Não existem saldos pendentes.";
-    }
-}
+        container.innerHTML =
+            "Neste momento, ninguém deve nada.";
 
-
-/* =====================================
-   LIQUIDAR DÍVIDA
-===================================== */
-
-async function liquidarDivida(id) {
-
-    const confirmar =
-        confirm(
-            "Marcar esta dívida como paga?"
-        );
-
-    if (!confirmar) {
         return;
     }
 
 
+    container.innerHTML = "";
+
+
+    pares.forEach(
+        par => {
+
+            let devedor;
+            let credor;
+            let valor;
+
+
+            if (
+                par.saldo > 0
+            ) {
+
+                devedor =
+                    par.pessoaA;
+
+                credor =
+                    par.pessoaB;
+
+                valor =
+                    par.saldo;
+
+            } else {
+
+                devedor =
+                    par.pessoaB;
+
+                credor =
+                    par.pessoaA;
+
+                valor =
+                    Math.abs(
+                        par.saldo
+                    );
+
+            }
+
+
+            const div =
+                document.createElement(
+                    "div"
+                );
+
+
+            div.className =
+                "resumo-item";
+
+
+            div.innerHTML = `
+                <strong>
+                    ${escapeHTML(
+                        nomes[devedor] ||
+                        "Desconhecido"
+                    )}
+
+                    deve
+                    ${euro(valor)}
+
+                    a
+
+                    ${escapeHTML(
+                        nomes[credor] ||
+                        "Desconhecido"
+                    )}
+                </strong>
+
+                <br>
+
+                <small>
+                    Saldo líquido entre os dois.
+                </small>
+
+                <br>
+
+                <button
+                    type="button"
+                    onclick="registarPagamento(
+                        ${devedor},
+                        ${credor},
+                        ${valor}
+                    )"
+                >
+                    Registar pagamento
+                </button>
+            `;
+
+
+            container.appendChild(
+                div
+            );
+
+        }
+    );
+
+}
+
+
+/* =====================================
+   REGISTAR PAGAMENTO
+===================================== */
+
+async function registarPagamento(
+    devedorId,
+    credorId,
+    saldoAtual
+) {
+
+    const resposta =
+        prompt(
+            `Saldo atual: ${euro(
+                saldoAtual
+            )}\n\nQuanto foi pago?`
+        );
+
+
+    if (
+        resposta === null
+    ) {
+        return;
+    }
+
+
+    const valorPagamento =
+        Number(
+            resposta
+                .replace(
+                    ",",
+                    "."
+                )
+        );
+
+
+    if (
+        !Number.isFinite(
+            valorPagamento
+        ) ||
+        valorPagamento <= 0
+    ) {
+
+        alert(
+            "Introduza um valor válido."
+        );
+
+        return;
+    }
+
+
+    if (
+        valorPagamento >
+        saldoAtual
+    ) {
+
+        alert(
+            "O pagamento não pode ser superior ao saldo."
+        );
+
+        return;
+    }
+
+
+    /*
+       Procuramos todas as dívidas
+       dessa direção.
+    */
+
     const {
+        data: dividas,
         error
     } =
         await supabaseClient
             .from("dividas")
-            .update({
-                liquidado: true
-            })
+            .select(
+                "id, valor, valor_pago, liquidado, devedor_id, credor_id"
+            )
             .eq(
-                "id",
-                id
+                "liquidado",
+                false
             );
 
 
     if (error) {
 
         alert(
-            "Erro: " +
+            "Erro ao carregar dívidas:\n" +
             error.message
         );
 
@@ -1456,33 +1210,435 @@ async function liquidarDivida(id) {
     }
 
 
-    await carregarSaldos();
+    let restante =
+        valorPagamento;
+
+
+    /*
+       Pagamos primeiro as dívidas
+       do mesmo devedor/credor.
+    */
+
+    for (
+        const divida of dividas
+    ) {
+
+        if (
+            restante <= 0
+        ) {
+            break;
+        }
+
+
+        if (
+            Number(
+                divida.devedor_id
+            ) !==
+            Number(devedorId) ||
+            Number(
+                divida.credor_id
+            ) !==
+            Number(credorId)
+        ) {
+
+            continue;
+        }
+
+
+        const atual =
+            Number(
+                divida.valor_pago ||
+                0
+            );
+
+
+        const falta =
+            Number(
+                divida.valor
+            ) -
+            atual;
+
+
+        const aplicar =
+            Math.min(
+                restante,
+                falta
+            );
+
+
+        const novoValorPago =
+            atual +
+            aplicar;
+
+
+        const liquidado =
+            novoValorPago >=
+            Number(
+                divida.valor
+            );
+
+
+        const {
+            error: erroUpdate
+        } =
+            await supabaseClient
+                .from("dividas")
+                .update({
+
+                    valor_pago:
+                        novoValorPago,
+
+                    liquidado:
+                        liquidado
+
+                })
+                .eq(
+                    "id",
+                    divida.id
+                );
+
+
+        if (
+            erroUpdate
+        ) {
+
+            alert(
+                "Erro ao registar pagamento:\n" +
+                erroUpdate.message
+            );
+
+            return;
+        }
+
+
+        restante -=
+            aplicar;
+
+    }
+
+
+    alert(
+        "Pagamento registado com sucesso."
+    );
+
+
+    await atualizarTudo();
+
 }
 
 
 /* =====================================
-   EXPORTAR JSON
+   GRÁFICO
+===================================== */
+
+async function atualizarGrafico() {
+
+    const canvas =
+        document.getElementById(
+            "graficoCategorias"
+        );
+
+
+    if (
+        !canvas ||
+        typeof Chart === "undefined"
+    ) {
+        return;
+    }
+
+
+    const despesas =
+        await carregarDespesas();
+
+
+    const valores = {};
+
+
+    despesas.forEach(
+        despesa => {
+
+            const categoria =
+                obterCategoriaDespesa(
+                    despesa.id
+                );
+
+
+            valores[categoria] =
+                (
+                    valores[categoria] ||
+                    0
+                ) +
+                Number(
+                    despesa.valor
+                );
+
+        }
+    );
+
+
+    const labels =
+        Object.keys(
+            valores
+        );
+
+
+    const data =
+        Object.values(
+            valores
+        );
+
+
+    if (grafico) {
+
+        grafico.destroy();
+
+        grafico = null;
+
+    }
+
+
+    if (
+        !labels.length
+    ) {
+
+        return;
+    }
+
+
+    grafico =
+        new Chart(
+            canvas.getContext("2d"),
+            {
+
+                type:
+                    "pie",
+
+                data: {
+
+                    labels,
+
+                    datasets: [
+                        {
+                            data
+                        }
+                    ]
+
+                },
+
+                options: {
+
+                    responsive:
+                        true,
+
+                    plugins: {
+
+                        legend: {
+
+                            position:
+                                "bottom"
+
+                        }
+
+                    }
+
+                }
+
+            }
+        );
+
+}
+
+
+/* =====================================
+   RESUMO
+===================================== */
+
+async function atualizarResumo() {
+
+    const despesas =
+        await carregarDespesas();
+
+
+    let totalDespesas =
+        0;
+
+
+    despesas.forEach(
+        despesa => {
+
+            totalDespesas +=
+                Number(
+                    despesa.valor
+                );
+
+        }
+    );
+
+
+    const {
+        data: dividas
+    } =
+        await supabaseClient
+            .from("dividas")
+            .select(
+                "valor, valor_pago, liquidado"
+            );
+
+
+    let totalDevido =
+        0;
+
+
+    (
+        dividas ||
+        []
+    )
+    .forEach(
+        divida => {
+
+            totalDevido +=
+                Math.max(
+                    0,
+                    Number(
+                        divida.valor
+                    ) -
+                    Number(
+                        divida.valor_pago ||
+                        0
+                    )
+                );
+
+        }
+    );
+
+
+    document.getElementById(
+        "saldoAtual"
+    ).textContent =
+        euro(
+            totalDespesas
+        );
+
+
+    document.getElementById(
+        "totalReceitas"
+    ).textContent =
+        euro(
+            totalDevido
+        );
+
+
+    document.getElementById(
+        "totalDespesas"
+    ).textContent =
+        euro(
+            totalDespesas
+        );
+
+}
+
+
+/* =====================================
+   FILTROS
+===================================== */
+
+function configurarFiltros() {
+
+    const pesquisa =
+        document.getElementById(
+            "pesquisa"
+        );
+
+    const categoria =
+        document.getElementById(
+            "filtroCategoria"
+        );
+
+    const mes =
+        document.getElementById(
+            "filtroMes"
+        );
+
+
+    if (pesquisa) {
+
+        pesquisa.addEventListener(
+            "input",
+            atualizarTudo
+        );
+
+    }
+
+
+    if (categoria) {
+
+        categoria.addEventListener(
+            "change",
+            atualizarTudo
+        );
+
+    }
+
+
+    if (mes) {
+
+        mes.addEventListener(
+            "change",
+            atualizarTudo
+        );
+
+    }
+
+}
+
+
+function limparFiltros() {
+
+    document.getElementById(
+        "pesquisa"
+    ).value = "";
+
+    document.getElementById(
+        "filtroCategoria"
+    ).value = "";
+
+    document.getElementById(
+        "filtroMes"
+    ).value = "";
+
+    atualizarTudo();
+
+}
+
+
+/* =====================================
+   ATUALIZAR TUDO
+===================================== */
+
+async function atualizarTudo() {
+
+    await atualizarResumo();
+
+    await renderTabela();
+
+    await atualizarSaldo();
+
+    await atualizarGrafico();
+
+}
+
+
+/* =====================================
+   EXPORTAÇÃO
 ===================================== */
 
 function exportarJSON() {
 
-    const backup = {
-        exportadoEm:
-            new Date().toISOString(),
-
-        orcamento:
-            dados.orcamento,
-
-        movimentos:
-            dados.movimentos
-    };
-
-
-    const blob =
+    const ficheiro =
         new Blob(
             [
                 JSON.stringify(
-                    backup,
+                    dados,
                     null,
                     2
                 )
@@ -1494,26 +1650,43 @@ function exportarJSON() {
         );
 
 
-    descarregarBlob(
-        blob,
-        "gestor-financeiro.json"
+    const url =
+        URL.createObjectURL(
+            ficheiro
+        );
+
+
+    const link =
+        document.createElement(
+            "a"
+        );
+
+
+    link.href = url;
+
+    link.download =
+        "gestor-financeiro.json";
+
+    link.click();
+
+
+    URL.revokeObjectURL(
+        url
     );
+
 }
 
-
-/* =====================================
-   EXPORTAR CSV
-===================================== */
 
 function exportarCSV() {
 
     const linhas = [
         [
             "Data",
-            "Tipo",
-            "Categoria",
             "Descrição",
-            "Valor"
+            "Categoria",
+            "Valor",
+            "Pagou",
+            "Parte"
         ]
     ];
 
@@ -1523,10 +1696,11 @@ function exportarCSV() {
 
             linhas.push([
                 movimento.data,
-                movimento.tipo,
-                movimento.categoria,
                 movimento.descricao,
-                movimento.valor
+                movimento.categoria,
+                movimento.valor,
+                movimento.pagadorNome,
+                movimento.metade
             ]);
 
         }
@@ -1541,7 +1715,8 @@ function exportarCSV() {
                         .map(
                             valor =>
                                 `"${String(
-                                    valor
+                                    valor ||
+                                    ""
                                 ).replaceAll(
                                     '"',
                                     '""'
@@ -1555,7 +1730,8 @@ function exportarCSV() {
     const blob =
         new Blob(
             [
-                "\uFEFF" + csv
+                "\uFEFF" +
+                csv
             ],
             {
                 type:
@@ -1564,161 +1740,30 @@ function exportarCSV() {
         );
 
 
-    descarregarBlob(
-        blob,
-        "gestor-financeiro.csv"
-    );
-}
-
-
-function descarregarBlob(
-    blob,
-    nome
-) {
-
     const url =
         URL.createObjectURL(
             blob
         );
 
-    const a =
+
+    const link =
         document.createElement(
             "a"
         );
 
-    a.href = url;
 
-    a.download = nome;
+    link.href = url;
 
-    document.body.appendChild(a);
+    link.download =
+        "despesas-50-50.csv";
 
-    a.click();
+    link.click();
 
-    a.remove();
 
     URL.revokeObjectURL(
         url
     );
-}
 
-
-/* =====================================
-   IMPORTAR JSON
-===================================== */
-
-function importarJSON() {
-
-    const ficheiro =
-        document.getElementById(
-            "importFile"
-        )?.files[0];
-
-    if (!ficheiro) {
-
-        alert(
-            "Selecione um ficheiro JSON."
-        );
-
-        return;
-    }
-
-
-    const reader =
-        new FileReader();
-
-
-    reader.onload =
-        event => {
-
-            try {
-
-                const backup =
-                    JSON.parse(
-                        event.target.result
-                    );
-
-
-                if (
-                    !Array.isArray(
-                        backup.movimentos
-                    )
-                ) {
-
-                    throw new Error(
-                        "Formato de backup inválido."
-                    );
-                }
-
-
-                dados = {
-
-                    orcamento:
-                        Number(
-                            backup.orcamento || 0
-                        ),
-
-                    movimentos:
-                        backup.movimentos
-                };
-
-
-                guardarDados();
-
-
-                const campo =
-                    document.getElementById(
-                        "orcamentoMensal"
-                    );
-
-
-                if (campo) {
-
-                    campo.value =
-                        dados.orcamento || "";
-                }
-
-
-                atualizarTudo();
-
-
-                alert(
-                    "Backup importado com sucesso."
-                );
-
-            } catch (erro) {
-
-                alert(
-                    "Não foi possível importar o backup:\n\n" +
-                    erro.message
-                );
-            }
-
-        };
-
-
-    reader.readAsText(
-        ficheiro
-    );
-}
-
-
-/* =====================================
-   ATUALIZAR TUDO
-===================================== */
-
-function atualizarTudo() {
-
-    atualizarDashboard();
-
-    atualizarOrcamento();
-
-    atualizarFiltroCategorias();
-
-    renderTabela();
-
-    atualizarResumoCategorias();
-
-    atualizarGrafico();
 }
 
 
@@ -1728,33 +1773,31 @@ function atualizarTudo() {
 
 async function iniciarAplicacao() {
 
-    prepararDatas();
-
-
-    const orcamento =
+    const data =
         document.getElementById(
-            "orcamentoMensal"
+            "dataDespesa"
         );
 
-
-    if (orcamento) {
-
-        orcamento.value =
-            dados.orcamento || "";
+    if (data) {
+        data.value =
+            hojeISO();
     }
 
 
     configurarFiltros();
 
 
-    atualizarTudo();
+    await carregarPessoas();
 
 
-    await carregarPessoasDividas();
+    await atualizarTudo();
 
-    await carregarSaldos();
 }
 
+
+/* =====================================
+   START
+===================================== */
 
 document.addEventListener(
     "DOMContentLoaded",

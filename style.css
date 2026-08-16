@@ -1,7 +1,3 @@
-/* =====================================
-   GESTOR FINANCEIRO 2.0
-===================================== */
-
 * {
     margin: 0;
     padding: 0;
@@ -9,15 +5,14 @@
 }
 
 :root {
+
     --primary: #16a34a;
     --primary-dark: #15803d;
 
     --blue: #2563eb;
     --purple: #7c3aed;
 
-    --success: #16a34a;
     --danger: #dc2626;
-    --warning: #f59e0b;
 
     --background: #f3f4f6;
     --card: #ffffff;
@@ -26,622 +21,548 @@
     --muted: #6b7280;
 
     --border: #d1d5db;
-    --soft: #f8fafc;
 
     --radius: 14px;
 }
 
 
-/* =====================================
-   BASE
-===================================== */
-
 body {
+
     font-family:
         Arial,
         Helvetica,
         sans-serif;
 
-    background: var(--background);
-    color: var(--text);
+    background:
+        var(--background);
 
-    line-height: 1.5;
+    color:
+        var(--text);
+
+    line-height:
+        1.5;
+
 }
 
-
-/* =====================================
-   HEADER
-===================================== */
 
 .header {
-    background: var(--primary);
-    color: white;
 
-    padding: 28px 20px;
+    background:
+        var(--primary);
 
-    text-align: center;
+    color:
+        white;
+
+    text-align:
+        center;
+
+    padding:
+        28px 20px;
 
     box-shadow:
-        0 2px 8px rgba(0, 0, 0, 0.12);
+        0 2px 8px
+        rgba(
+            0,
+            0,
+            0,
+            0.12
+        );
+
 }
+
 
 .header h1 {
-    font-size: 32px;
-    margin-bottom: 4px;
+
+    font-size:
+        30px;
+
+    margin-bottom:
+        5px;
+
 }
+
 
 .header p {
-    font-size: 16px;
-    opacity: 0.95;
+
+    opacity:
+        0.95;
+
 }
 
-
-/* =====================================
-   CONTAINER
-===================================== */
 
 .container {
-    width: 100%;
-    max-width: 1200px;
 
-    margin: 0 auto;
+    width:
+        100%;
 
-    padding: 24px 16px;
+    max-width:
+        1200px;
+
+    margin:
+        0 auto;
+
+    padding:
+        24px 16px;
+
 }
 
-
-/* =====================================
-   CARDS
-===================================== */
 
 .card {
-    background: var(--card);
 
-    border-radius: var(--radius);
+    background:
+        var(--card);
 
-    padding: 22px;
+    border-radius:
+        var(--radius);
 
-    margin-bottom: 20px;
+    padding:
+        22px;
+
+    margin-bottom:
+        20px;
 
     box-shadow:
-        0 2px 10px rgba(0, 0, 0, 0.07);
+        0 2px 10px
+        rgba(
+            0,
+            0,
+            0,
+            0.07
+        );
+
 }
+
 
 .card h2 {
-    font-size: 22px;
 
-    margin-bottom: 16px;
+    font-size:
+        22px;
 
-    color: var(--text);
+    margin-bottom:
+        16px;
+
 }
+
 
 .section-help {
-    color: var(--muted);
 
-    margin-top: -8px;
-    margin-bottom: 18px;
+    color:
+        var(--muted);
 
-    font-size: 14px;
+    font-size:
+        14px;
+
+    margin-bottom:
+        18px;
+
 }
 
-
-/* =====================================
-   DASHBOARD
-===================================== */
 
 .dashboard {
-    display: grid;
+
+    display:
+        grid;
 
     grid-template-columns:
         repeat(
-            auto-fit,
-            minmax(210px, 1fr)
+            2,
+            minmax(
+                0,
+                1fr
+            )
         );
 
-    gap: 16px;
+    gap:
+        16px;
+
 }
+
 
 .stat-card {
-    color: white;
 
-    padding: 20px;
+    background:
+        #6b7280;
 
-    border-radius: 12px;
+    color:
+        white;
 
-    display: flex;
+    padding:
+        20px;
 
-    flex-direction: column;
+    border-radius:
+        12px;
 
-    gap: 8px;
+    display:
+        flex;
+
+    flex-direction:
+        column;
+
+    gap:
+        8px;
+
 }
+
 
 .stat-card span {
-    font-size: 15px;
 
-    opacity: 0.95;
+    font-size:
+        14px;
+
+    opacity:
+        0.95;
+
 }
+
 
 .stat-card strong {
-    font-size: 28px;
-}
 
-.saldo {
-    background: var(--blue);
-}
+    font-size:
+        24px;
 
-.receita {
-    background: var(--success);
-}
-
-.despesa {
-    background: var(--danger);
-}
-
-.orcamento {
-    background: var(--purple);
 }
 
 
-/* =====================================
-   FORMULÁRIOS
-===================================== */
+.stat-card.despesa {
+
+    background:
+        #dc2626;
+
+}
+
+
+.stat-card.saldo {
+
+    background:
+        #2563eb;
+
+}
+
 
 .form-grid {
-    display: grid;
+
+    display:
+        grid;
 
     grid-template-columns:
         repeat(
             auto-fit,
-            minmax(220px, 1fr)
+            minmax(
+                220px,
+                1fr
+            )
         );
 
-    gap: 16px;
+    gap:
+        16px;
+
 }
 
-.form-grid > div {
-    min-width: 0;
-}
 
 label {
-    display: block;
 
-    font-weight: bold;
+    display:
+        block;
 
-    margin-bottom: 6px;
+    font-weight:
+        bold;
 
-    color: var(--text);
+    margin-bottom:
+        6px;
+
 }
+
 
 input,
 select {
-    width: 100%;
 
-    min-height: 44px;
+    width:
+        100%;
 
-    padding: 10px 12px;
+    min-height:
+        44px;
+
+    padding:
+        10px 12px;
 
     border:
-        1px solid var(--border);
+        1px solid
+        var(--border);
 
-    border-radius: 8px;
+    border-radius:
+        8px;
 
-    background: white;
+    background:
+        white;
 
-    color: var(--text);
+    color:
+        var(--text);
 
-    font-size: 15px;
+    font-size:
+        15px;
 
-    outline: none;
 }
+
 
 input:focus,
 select:focus {
-    border-color: var(--primary);
+
+    outline:
+        none;
+
+    border-color:
+        var(--primary);
 
     box-shadow:
         0 0 0 2px
-        rgba(22, 163, 74, 0.12);
+        rgba(
+            22,
+            163,
+            74,
+            0.12
+        );
+
 }
+
 
 .form-button {
-    display: flex;
 
-    align-items: flex-end;
+    display:
+        flex;
+
+    align-items:
+        flex-end;
+
 }
 
-
-/* =====================================
-   BOTÕES
-===================================== */
 
 button {
-    min-height: 44px;
 
-    padding: 10px 16px;
+    min-height:
+        42px;
 
-    border: none;
+    padding:
+        9px 15px;
 
-    border-radius: 8px;
+    border:
+        none;
 
-    background: var(--primary);
+    border-radius:
+        8px;
 
-    color: white;
+    background:
+        var(--primary);
 
-    font-size: 15px;
+    color:
+        white;
 
-    font-weight: bold;
+    font-size:
+        14px;
 
-    cursor: pointer;
+    font-weight:
+        bold;
 
-    transition:
-        transform 0.15s ease,
-        opacity 0.15s ease;
+    cursor:
+        pointer;
+
 }
+
 
 button:hover {
-    opacity: 0.92;
+
+    background:
+        var(--primary-dark);
+
 }
 
-button:active {
-    transform: scale(0.98);
-}
-
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-
-/* =====================================
-   PROGRESSO ORÇAMENTO
-===================================== */
-
-.progress-container {
-    width: 100%;
-
-    height: 24px;
-
-    margin-top: 18px;
-
-    background: #e5e7eb;
-
-    border-radius: 20px;
-
-    overflow: hidden;
-}
-
-#progressBar {
-    width: 0%;
-
-    height: 100%;
-
-    background: var(--success);
-
-    transition:
-        width 0.3s ease,
-        background 0.3s ease;
-}
-
-#percentagemOrcamento {
-    margin-top: 10px;
-
-    font-weight: bold;
-
-    color: var(--muted);
-}
-
-
-/* =====================================
-   TABELAS
-===================================== */
 
 .table-container {
-    width: 100%;
 
-    overflow-x: auto;
+    width:
+        100%;
+
+    overflow-x:
+        auto;
+
+    margin-top:
+        18px;
+
 }
+
 
 table {
-    width: 100%;
 
-    min-width: 700px;
+    width:
+        100%;
 
-    border-collapse: collapse;
+    min-width:
+        850px;
+
+    border-collapse:
+        collapse;
+
 }
+
 
 th,
 td {
-    padding: 11px 10px;
+
+    padding:
+        11px 10px;
+
+    text-align:
+        left;
 
     border-bottom:
-        1px solid #e5e7eb;
+        1px solid
+        #e5e7eb;
 
-    text-align: left;
-
-    vertical-align: middle;
 }
+
 
 th {
-    background: var(--soft);
 
-    font-weight: bold;
+    background:
+        #f8fafc;
+
 }
+
 
 tbody tr:hover {
-    background: #fafafa;
+
+    background:
+        #fafafa;
+
 }
 
-.receita-text {
-    color: var(--success);
-
-    font-weight: bold;
-}
-
-.despesa-text {
-    color: var(--danger);
-
-    font-weight: bold;
-}
-
-
-/* =====================================
-   BOTÕES DA TABELA
-===================================== */
-
-table button {
-    min-height: 36px;
-
-    padding: 7px 10px;
-
-    font-size: 13px;
-
-    margin: 2px;
-}
-
-table button:last-child {
-    background: var(--danger);
-}
-
-
-/* =====================================
-   RESUMOS
-===================================== */
 
 .resumo-item {
-    padding: 14px 4px;
+
+    padding:
+        15px 4px;
 
     border-bottom:
-        1px solid #e5e7eb;
+        1px solid
+        #e5e7eb;
+
 }
+
 
 .resumo-item:last-child {
-    border-bottom: none;
+
+    border-bottom:
+        none;
+
 }
 
-.resumo-item strong {
-    font-size: 17px;
+
+.resumo-item button {
+
+    margin-top:
+        10px;
+
 }
 
-
-/* =====================================
-   GRÁFICO
-===================================== */
 
 .chart-container {
-    position: relative;
 
-    width: 100%;
+    width:
+        100%;
 
-    max-width: 700px;
+    max-width:
+        650px;
 
-    min-height: 320px;
+    margin:
+        0 auto;
 
-    margin: 0 auto;
 }
 
-.chart-container canvas {
-    width: 100% !important;
-    height: auto !important;
-}
-
-
-/* =====================================
-   AÇÕES
-===================================== */
 
 .actions {
-    display: flex;
 
-    flex-wrap: wrap;
+    display:
+        flex;
 
-    gap: 10px;
+    gap:
+        10px;
+
+    flex-wrap:
+        wrap;
+
 }
 
-.actions button {
-    flex: 0 1 auto;
-}
-
-
-/* =====================================
-   IMPORTAÇÃO
-===================================== */
-
-.import-area {
-    display: grid;
-
-    grid-template-columns:
-        1fr auto;
-
-    gap: 12px;
-
-    align-items: end;
-
-    margin-top: 20px;
-}
-
-.import-area label {
-    grid-column: 1 / -1;
-}
-
-.import-area input {
-    min-width: 0;
-}
-
-
-/* =====================================
-   FOOTER
-===================================== */
 
 .footer {
-    text-align: center;
 
-    padding: 24px 16px;
+    text-align:
+        center;
 
-    color: var(--muted);
+    color:
+        var(--muted);
 
-    font-size: 14px;
+    padding:
+        25px;
+
 }
 
 
-/* =====================================
-   MOBILE
-===================================== */
+@media (
+    max-width: 700px
+) {
 
-@media (max-width: 768px) {
+    .dashboard {
 
-    .header {
-        padding: 22px 15px;
+        grid-template-columns:
+            1fr;
+
     }
 
-    .header h1 {
-        font-size: 25px;
-    }
-
-    .header p {
-        font-size: 14px;
-    }
 
     .container {
+
         padding:
             14px 10px;
+
     }
+
 
     .card {
-        padding: 16px;
 
-        margin-bottom: 14px;
+        padding:
+            16px;
+
     }
 
-    .card h2 {
-        font-size: 20px;
-    }
-
-    .dashboard {
-        grid-template-columns:
-            1fr 1fr;
-    }
-
-    .stat-card {
-        padding: 16px;
-    }
-
-    .stat-card strong {
-        font-size: 21px;
-    }
 
     .form-grid {
-        grid-template-columns: 1fr;
+
+        grid-template-columns:
+            1fr;
+
     }
 
-    .form-button {
-        align-items: stretch;
-    }
 
     .form-button button {
-        width: 100%;
+
+        width:
+            100%;
+
     }
+
 
     .actions {
-        flex-direction: column;
+
+        flex-direction:
+            column;
+
     }
+
 
     .actions button {
-        width: 100%;
+
+        width:
+            100%;
+
     }
 
-    .import-area {
-        grid-template-columns: 1fr;
-    }
-
-    .import-area button {
-        width: 100%;
-    }
-
-    .chart-container {
-        min-height: 260px;
-    }
-}
-
-
-/* =====================================
-   MOBILE PEQUENO
-===================================== */
-
-@media (max-width: 430px) {
-
-    .dashboard {
-        grid-template-columns: 1fr;
-    }
-
-    .stat-card strong {
-        font-size: 24px;
-    }
-
-    input,
-    select,
-    button {
-        font-size: 16px;
-    }
-}
-
-
-/* =====================================
-   IMPRESSÃO
-===================================== */
-
-@media print {
-
-    body {
-        background: white;
-    }
-
-    .header {
-        background: white;
-
-        color: black;
-
-        box-shadow: none;
-    }
-
-    .card {
-        box-shadow: none;
-
-        border:
-            1px solid #ddd;
-
-        break-inside: avoid;
-    }
-
-    button,
-    input,
-    select,
-    .actions,
-    .import-area,
-    .progress-container {
-        display: none !important;
-    }
-
-    .footer {
-        color: black;
-    }
 }

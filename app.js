@@ -209,19 +209,15 @@ async function registarDespesa() {
             "tipoDespesa"
         ).value;
 
-
     const descricao =
         document.getElementById(
             "descricao"
-        ).value
-            .trim();
-
+        ).value.trim();
 
     const categoria =
         document.getElementById(
             "categoria"
         ).value;
-
 
     const valor =
         Number(
@@ -230,14 +226,12 @@ async function registarDespesa() {
             ).value
         );
 
-
     const pagadorId =
         Number(
             document.getElementById(
                 "pagador"
             ).value
         );
-
 
     const data =
         document.getElementById(
@@ -246,51 +240,26 @@ async function registarDespesa() {
 
 
     if (!descricao) {
-
-        alert(
-            "Introduza uma descrição."
-        );
-
+        alert("Introduza uma descrição.");
         return;
-
     }
-
 
     if (
-        !Number.isFinite(
-            valor
-        ) ||
+        !Number.isFinite(valor) ||
         valor <= 0
     ) {
-
-        alert(
-            "Introduza um valor válido."
-        );
-
+        alert("Introduza um valor válido.");
         return;
-
     }
-
 
     if (!pagadorId) {
-
-        alert(
-            "Selecione quem pagou."
-        );
-
+        alert("Selecione quem pagou.");
         return;
-
     }
 
-
     if (!data) {
-
-        alert(
-            "Selecione uma data."
-        );
-
+        alert("Selecione uma data.");
         return;
-
     }
 
 
@@ -299,50 +268,40 @@ async function registarDespesa() {
         const pessoas =
             await obterPessoas();
 
-
-        if (
-            pessoas.length !== 2
-        ) {
+        if (pessoas.length !== 2) {
 
             alert(
                 "A aplicação necessita de exatamente duas pessoas."
             );
 
             return;
-
         }
 
 
         const outraPessoa =
             pessoas.find(
                 pessoa =>
-                    Number(
-                        pessoa.id
-                    ) !==
+                    Number(pessoa.id) !==
                     pagadorId
             );
 
 
-        if (
-            !outraPessoa
-        ) {
+        if (!outraPessoa) {
 
             alert(
                 "Não foi possível determinar a outra pessoa."
             );
 
             return;
-
         }
 
 
         const partilhada =
-            tipo ===
-            "partilhada";
+            tipo === "partilhada";
 
 
         /* ==============================
-           DESPESA
+           GUARDAR DESPESA
         ============================== */
 
         const {
@@ -355,31 +314,18 @@ async function registarDespesa() {
                 )
                 .insert([
                     {
-                        descricao:
-                            descricao,
-
-                        valor:
-                            valor,
-
-                        pagador_id:
-                            pagadorId,
-
-                        data:
-                            data,
-
-                        partilhada:
-                            partilhada
+                        descricao: descricao,
+                        valor: valor,
+                        pagador_id: pagadorId,
+                        data: data,
+                        partilhada: partilhada
                     }
                 ])
-                .select(
-                    "id"
-                )
+                .select("id")
                 .single();
 
 
-        if (
-            erroDespesa
-        ) {
+        if (erroDespesa) {
 
             throw new Error(
                 "Erro ao criar despesa: " +
@@ -390,36 +336,28 @@ async function registarDespesa() {
 
 
         /* ==============================
-           GUARDAR CATEGORIA LOCALMENTE
+           GUARDAR CATEGORIA
         ============================== */
 
         dados.categoriasLocais =
-            dados.categoriasLocais ||
-            {};
-
+            dados.categoriasLocais || {};
 
         dados.categoriasLocais[
             despesa.id
-        ] =
-            categoria;
-
+        ] = categoria;
 
         guardarDadosLocais();
 
 
         /* ==============================
-           DÍVIDA 50/50
+           SÓ CRIAR DÍVIDA SE PARTILHADA
         ============================== */
 
-        if (
-            partilhada
-        ) {
+        if (partilhada) {
 
             const valorDevido =
                 Math.round(
-                    (
-                        valor / 2
-                    ) * 100
+                    (valor / 2) * 100
                 ) / 100;
 
 
@@ -427,12 +365,9 @@ async function registarDespesa() {
                 error: erroDivida
             } =
                 await supabaseClient
-                    .from(
-                        "dividas"
-                    )
+                    .from("dividas")
                     .insert([
                         {
-
                             despesa_id:
                                 despesa.id,
 
@@ -450,14 +385,11 @@ async function registarDespesa() {
 
                             liquidado:
                                 false
-
                         }
                     ]);
 
 
-            if (
-                erroDivida
-            ) {
+            if (erroDivida) {
 
                 throw new Error(
                     "A despesa foi criada, mas a dívida falhou: " +
@@ -477,7 +409,6 @@ async function registarDespesa() {
             "descricao"
         ).value = "";
 
-
         document.getElementById(
             "valor"
         ).value = "";
@@ -495,9 +426,7 @@ async function registarDespesa() {
 
     } catch (error) {
 
-        console.error(
-            error
-        );
+        console.error(error);
 
         alert(
             error.message
@@ -506,7 +435,6 @@ async function registarDespesa() {
     }
 
 }
-
 
 /* =====================================
    DESPESAS

@@ -33,11 +33,44 @@
 
 <header class="header">
 
-    <h1>💰 Gestor Financeiro</h1>
+    <div
+        style="
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        "
+    >
 
-    <p>
-        Despesas pessoais · Despesas partilhadas · Saldos
-    </p>
+        <div>
+
+            <h1>💰 Gestor Financeiro</h1>
+
+            <p>
+                Despesas pessoais · Despesas partilhadas · Saldos
+            </p>
+
+        </div>
+
+
+        <button
+            id="logoutButton"
+            type="button"
+            onclick="fazerLogout()"
+            style="
+                background: rgba(255,255,255,0.18);
+                border: 1px solid rgba(255,255,255,0.35);
+                color: white;
+                white-space: nowrap;
+            "
+        >
+            🚪 Terminar sessão
+        </button>
+
+    </div>
 
 </header>
 
@@ -108,7 +141,10 @@
 
     <p
         id="loginErro"
-        style="color: #dc2626; margin-top: 12px;"
+        style="
+            color: #dc2626;
+            margin-top: 12px;
+        "
     ></p>
 
 </section>
@@ -389,7 +425,6 @@
         <h2>📅 Histórico de Despesas</h2>
 
         <div class="form-grid">
-
 
             <div>
 

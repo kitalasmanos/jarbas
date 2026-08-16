@@ -376,16 +376,20 @@ button:hover {
 }
 
 
+/* =====================================
+   TABELA
+===================================== */
+
 .table-container {
 
     width:
         100%;
 
-    overflow-x:
-        auto;
-
     margin-top:
         18px;
+
+    overflow-x:
+        hidden;
 
 }
 
@@ -395,11 +399,11 @@ table {
     width:
         100%;
 
-    min-width:
-        850px;
-
     border-collapse:
         collapse;
+
+    table-layout:
+        fixed;
 
 }
 
@@ -413,9 +417,18 @@ td {
     text-align:
         left;
 
+    vertical-align:
+        middle;
+
     border-bottom:
         1px solid
         #e5e7eb;
+
+    word-break:
+        break-word;
+
+    overflow-wrap:
+        anywhere;
 
 }
 
@@ -428,6 +441,83 @@ th {
 }
 
 
+/* Data */
+
+th:nth-child(1),
+td:nth-child(1) {
+
+    width:
+        13%;
+
+}
+
+
+/* Descrição */
+
+th:nth-child(2),
+td:nth-child(2) {
+
+    width:
+        20%;
+
+}
+
+
+/* Categoria */
+
+th:nth-child(3),
+td:nth-child(3) {
+
+    width:
+        15%;
+
+}
+
+
+/* Tipo */
+
+th:nth-child(4),
+td:nth-child(4) {
+
+    width:
+        17%;
+
+}
+
+
+/* Valor */
+
+th:nth-child(5),
+td:nth-child(5) {
+
+    width:
+        11%;
+
+}
+
+
+/* Pagou */
+
+th:nth-child(6),
+td:nth-child(6) {
+
+    width:
+        12%;
+
+}
+
+
+/* Ações */
+
+th:nth-child(7),
+td:nth-child(7) {
+
+    width:
+        12%;
+
+}
+
+
 tbody tr:hover {
 
     background:
@@ -435,6 +525,24 @@ tbody tr:hover {
 
 }
 
+
+td button {
+
+    min-height:
+        36px;
+
+    padding:
+        7px 10px;
+
+    font-size:
+        13px;
+
+}
+
+
+/* =====================================
+   RESUMOS
+===================================== */
 
 .resumo-item {
 
@@ -464,6 +572,10 @@ tbody tr:hover {
 }
 
 
+/* =====================================
+   GRÁFICO
+===================================== */
+
 .chart-container {
 
     width:
@@ -477,6 +589,10 @@ tbody tr:hover {
 
 }
 
+
+/* =====================================
+   AÇÕES
+===================================== */
 
 .actions {
 
@@ -492,6 +608,10 @@ tbody tr:hover {
 }
 
 
+/* =====================================
+   FOOTER
+===================================== */
+
 .footer {
 
     text-align:
@@ -505,6 +625,10 @@ tbody tr:hover {
 
 }
 
+
+/* =====================================
+   MOBILE
+===================================== */
 
 @media (
     max-width: 700px
@@ -562,6 +686,27 @@ tbody tr:hover {
 
         width:
             100%;
+
+    }
+
+
+    /* No telemóvel a tabela pode fazer scroll */
+
+    .table-container {
+
+        overflow-x:
+            auto;
+
+    }
+
+
+    table {
+
+        min-width:
+            760px;
+
+        table-layout:
+            auto;
 
     }
 

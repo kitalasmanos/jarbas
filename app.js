@@ -47,6 +47,15 @@ function euro(valor) {
 }
 
 
+function arredondarCentimos(valor) {
+
+    return Math.round(
+        (Number(valor) + Number.EPSILON) * 100
+    ) / 100;
+
+}
+
+
 function hojeISO() {
 
     return new Date()
@@ -144,9 +153,7 @@ async function fazerLogin() {
     }
 
 
-    if (
-        erro
-    ) {
+    if (erro) {
 
         erro.textContent =
             "";
@@ -650,12 +657,9 @@ async function registarDespesa() {
         ) {
 
             const valorDevido =
-                Math.round(
-                    (
-                        valor / 2
-                    ) *
-                    100
-                ) / 100;
+                arredondarCentimos(
+                    valor / 2
+                );
 
 
             const {
@@ -1229,7 +1233,296 @@ async function renderHistorico() {
 
 
 /* =====================================
-   SALDO
+   OBTER SALDO 50/50 CORRETO
+===================================== */
+
+async function calcularSaldo50x50() {
+
+    const despesas =
+        await obterDespesas();
+
+
+    const pessoas =
+        await obterPessoas();
+
+
+    if (
+        pessoas.length !== 2
+    ) {
+
+        throw new Error(
+            "A aplicação necessita de exatamente duas pessoas."
+        );
+
+    }
+
+
+    const nomes = {};
+
+    pessoas.forEach(
+        pessoa => {
+
+            nomes[
+                Number(
+                    pessoa.id
+                )
+            ] =
+                pessoa.nome;
+
+        }
+    );
+
+
+    const pessoa1 =
+        pessoas[0];
+
+    const pessoa2 =
+        pessoas[1];
+
+
+    /*
+       Apenas despesas PARTILHADAS entram
+       no cálculo do equilíbrio 50/50.
+    */
+
+    const partilhadas =
+        despesas.filter(
+            despesa =>
+                despesa.partilhada === true
+        );
+
+
+    let totalPesso1 =
+        0;
+
+    let totalPesso2 =
+        0;
+
+
+    partilhadas.forEach(
+        despesa => {
+
+            const valor =
+                Number(
+                    despesa.valor
+                );
+
+
+            if (
+                Number(
+                    despesa.pagador_id
+                ) ===
+                Number(
+                    pessoa1.id
+                )
+            ) {
+
+                totalPesso1 +=
+                    valor;
+
+            }
+
+
+            if (
+                Number(
+                    despesa.pagador_id
+                ) ===
+                Number(
+                    pessoa2.id
+                )
+            ) {
+
+                totalPesso2 +=
+                    valor;
+
+            }
+
+        }
+    );
+
+
+    /*
+       Saldo base:
+
+       positivo → pessoa2 deve pessoa1
+       negativo → pessoa1 deve pessoa2
+    */
+
+    let saldo =
+        (
+            totalPesso1 -
+            totalPesso2
+        ) / 2;
+
+
+    /*
+       Agora retiramos pagamentos já feitos.
+
+       dividas guarda:
+       devedor_id
+       credor_id
+       valor_pago
+    */
+
+    const {
+        data: dividas,
+        error
+    } =
+        await supabaseClient
+            .from(
+                "dividas"
+            )
+            .select(
+                "devedor_id, credor_id, valor_pago"
+            );
+
+
+    if (error) {
+
+        throw new Error(
+            error.message
+        );
+
+    }
+
+
+    (
+        dividas ||
+        []
+    )
+    .forEach(
+        divida => {
+
+            const pago =
+                Number(
+                    divida.valor_pago ||
+                    0
+                );
+
+
+            if (
+                pago <=
+                0
+            ) {
+
+                return;
+
+            }
+
+
+            /*
+               pessoa2 pagou pessoa1
+               → reduz o que pessoa2 deve
+            */
+
+            if (
+                Number(
+                    divida.devedor_id
+                ) ===
+                Number(
+                    pessoa2.id
+                ) &&
+                Number(
+                    divida.credor_id
+                ) ===
+                Number(
+                    pessoa1.id
+                )
+            ) {
+
+                saldo -=
+                    pago;
+
+            }
+
+
+            /*
+               pessoa1 pagou pessoa2
+               → aumenta o saldo na
+                  direção pessoa2 → pessoa1
+            */
+
+            if (
+                Number(
+                    divida.devedor_id
+                ) ===
+                Number(
+                    pessoa1.id
+                ) &&
+                Number(
+                    divida.credor_id
+                ) ===
+                Number(
+                    pessoa2.id
+                )
+            ) {
+
+                saldo +=
+                    pago;
+
+            }
+
+        }
+    );
+
+
+    saldo =
+        arredondarCentimos(
+            saldo
+        );
+
+
+    return {
+
+        saldo,
+
+        pessoa1:
+
+            Number(
+                pessoa1.id
+            ),
+
+        pessoa2:
+
+            Number(
+                pessoa2.id
+            ),
+
+        nomePessoa1:
+
+            nomes[
+                Number(
+                    pessoa1.id
+                )
+            ],
+
+        nomePessoa2:
+
+            nomes[
+                Number(
+                    pessoa2.id
+                )
+            ],
+
+        totalPessoa1:
+
+            arredondarCentimos(
+                totalPesso1
+            ),
+
+        totalPessoa2:
+
+            arredondarCentimos(
+                totalPesso2
+            )
+
+    };
+
+}
+
+
+/* =====================================
+   SALDO ENTRE PESSOAS
 ===================================== */
 
 async function atualizarSaldo() {
@@ -1247,166 +1540,18 @@ async function atualizarSaldo() {
 
     try {
 
-        const {
-            data: dividas,
-            error
-        } =
-            await supabaseClient
-                .from(
-                    "dividas"
-                )
-                .select(
-                    "id, valor, valor_pago, devedor_id, credor_id, liquidado"
-                )
-                .eq(
-                    "liquidado",
-                    false
-                );
+        const resultado =
+            await calcularSaldo50x50();
 
 
-        if (error) {
-
-            throw new Error(
-                error.message
-            );
-
-        }
-
-
-        const pessoas =
-            await obterPessoas();
-
-
-        const nomes = {};
-
-
-        pessoas.forEach(
-            pessoa => {
-
-                nomes[
-                    pessoa.id
-                ] =
-                    pessoa.nome;
-
-            }
-        );
-
-
-        const pares = {};
-
-
-        (
-            dividas || []
-        )
-        .forEach(
-            divida => {
-
-                const devedor =
-                    Number(
-                        divida.devedor_id
-                    );
-
-
-                const credor =
-                    Number(
-                        divida.credor_id
-                    );
-
-
-                const falta =
-                    Math.max(
-                        0,
-                        Number(
-                            divida.valor
-                        ) -
-                        Number(
-                            divida.valor_pago ||
-                            0
-                        )
-                    );
-
-
-                if (
-                    falta <=
-                    0
-                ) {
-
-                    return;
-
-                }
-
-
-                const ids = [
-                    devedor,
-                    credor
-                ].sort(
-                    (
-                        a,
-                        b
-                    ) =>
-                        a - b
-                );
-
-
-                const chave =
-                    `${ids[0]}-${ids[1]}`;
-
-
-                if (
-                    !pares[chave]
-                ) {
-
-                    pares[chave] = {
-
-                        pessoaA:
-                            ids[0],
-
-                        pessoaB:
-                            ids[1],
-
-                        saldo:
-                            0
-
-                    };
-
-                }
-
-
-                if (
-                    devedor ===
-                    ids[0]
-                ) {
-
-                    pares[chave].saldo +=
-                        falta;
-
-                } else {
-
-                    pares[chave].saldo -=
-                        falta;
-
-                }
-
-            }
-        );
-
-
-        const resultados =
-            Object.values(
-                pares
-            )
-            .filter(
-                par =>
-                    Math.abs(
-                        par.saldo
-                    ) >
-                    0.004
-            );
+        const saldo =
+            resultado.saldo;
 
 
         if (
-            resultados.length ===
-            0
+            Math.abs(
+                saldo
+            ) < 0.005
         ) {
 
             container.innerHTML =
@@ -1417,100 +1562,77 @@ async function atualizarSaldo() {
         }
 
 
-        container.innerHTML =
-            "";
+        let devedor;
+        let credor;
+        let valor;
 
 
-        resultados.forEach(
-            par => {
+        if (
+            saldo >
+            0
+        ) {
 
-                let devedor;
-                let credor;
-                let valor;
+            /*
+               pessoa2 deve pessoa1
+            */
 
+            devedor =
+                resultado.nomePessoa2;
 
-                if (
-                    par.saldo >
-                    0
-                ) {
+            credor =
+                resultado.nomePessoa1;
 
-                    devedor =
-                        par.pessoaA;
+            valor =
+                saldo;
 
-                    credor =
-                        par.pessoaB;
+        } else {
 
-                    valor =
-                        par.saldo;
+            /*
+               pessoa1 deve pessoa2
+            */
 
-                } else {
+            devedor =
+                resultado.nomePessoa1;
 
-                    devedor =
-                        par.pessoaB;
+            credor =
+                resultado.nomePessoa2;
 
-                    credor =
-                        par.pessoaA;
-
-                    valor =
-                        Math.abs(
-                            par.saldo
-                        );
-
-                }
-
-
-                const div =
-                    document.createElement(
-                        "div"
-                    );
-
-
-                div.className =
-                    "resumo-item";
-
-
-                div.innerHTML = `
-                    <strong>
-                        ${escapeHTML(
-                            nomes[
-                                devedor
-                            ] ||
-                            "Desconhecido"
-                        )}
-                        deve
-                        ${euro(
-                            valor
-                        )}
-                        a
-                        ${escapeHTML(
-                            nomes[
-                                credor
-                            ] ||
-                            "Desconhecido"
-                        )}
-                    </strong>
-
-                    <br>
-
-                    <button
-                        type="button"
-                        onclick="registarPagamento(
-                            ${devedor},
-                            ${credor},
-                            ${valor}
-                        )"
-                    >
-                        Registar pagamento
-                    </button>
-                `;
-
-
-                container.appendChild(
-                    div
+            valor =
+                Math.abs(
+                    saldo
                 );
 
-            }
-        );
+        }
+
+
+        container.innerHTML = `
+            <div class="resumo-item">
+
+                <strong>
+                    ${escapeHTML(
+                        devedor
+                    )}
+                    deve
+                    ${euro(
+                        valor
+                    )}
+                    a
+                    ${escapeHTML(
+                        credor
+                    )}
+                </strong>
+
+                <br>
+
+                <button
+                    type="button"
+                    onclick="registarPagamentoSaldo()"
+                >
+                    Registar pagamento
+                </button>
+
+            </div>
+        `;
 
 
     } catch (error) {
@@ -1533,68 +1655,148 @@ async function atualizarSaldo() {
    PAGAMENTO
 ===================================== */
 
-async function registarPagamento(
-    devedorId,
-    credorId,
-    saldoAtual
-) {
-
-    const resposta =
-        prompt(
-            `Saldo atual: ${euro(
-                saldoAtual
-            )}\n\nValor pago:`
-        );
-
-
-    if (
-        resposta ===
-        null
-    ) {
-
-        return;
-    }
-
-
-    const valorPagamento =
-        Number(
-            resposta.replace(
-                ",",
-                "."
-            )
-        );
-
-
-    if (
-        !Number.isFinite(
-            valorPagamento
-        ) ||
-        valorPagamento <=
-        0
-    ) {
-
-        alert(
-            "Valor de pagamento inválido."
-        );
-
-        return;
-    }
-
-
-    if (
-        valorPagamento >
-        saldoAtual
-    ) {
-
-        alert(
-            "O pagamento não pode ser superior ao saldo."
-        );
-
-        return;
-    }
-
+async function registarPagamentoSaldo() {
 
     try {
+
+        const resultado =
+            await calcularSaldo50x50();
+
+
+        const saldo =
+            resultado.saldo;
+
+
+        if (
+            Math.abs(
+                saldo
+            ) < 0.005
+        ) {
+
+            alert(
+                "Neste momento ninguém deve nada."
+            );
+
+            return;
+
+        }
+
+
+        let devedorId;
+        let credorId;
+        let devedorNome;
+        let credorNome;
+        let valorAtual;
+
+
+        if (
+            saldo >
+            0
+        ) {
+
+            devedorId =
+                resultado.pessoa2;
+
+            credorId =
+                resultado.pessoa1;
+
+            devedorNome =
+                resultado.nomePessoa2;
+
+            credorNome =
+                resultado.nomePessoa1;
+
+            valorAtual =
+                saldo;
+
+        } else {
+
+            devedorId =
+                resultado.pessoa1;
+
+            credorId =
+                resultado.pessoa2;
+
+            devedorNome =
+                resultado.nomePessoa1;
+
+            credorNome =
+                resultado.nomePessoa2;
+
+            valorAtual =
+                Math.abs(
+                    saldo
+                );
+
+        }
+
+
+        const resposta =
+            prompt(
+                `${devedorNome} deve ${euro(
+                    valorAtual
+                )} a ${credorNome}.\n\n` +
+                `Quanto foi pago?`
+            );
+
+
+        if (
+            resposta ===
+            null
+        ) {
+
+            return;
+
+        }
+
+
+        const valorPagamento =
+            Number(
+                resposta.replace(
+                    ",",
+                    "."
+                )
+            );
+
+
+        if (
+            !Number.isFinite(
+                valorPagamento
+            ) ||
+            valorPagamento <=
+            0
+        ) {
+
+            alert(
+                "Valor de pagamento inválido."
+            );
+
+            return;
+
+        }
+
+
+        if (
+            valorPagamento >
+            valorAtual
+        ) {
+
+            alert(
+                "O pagamento não pode ser superior ao saldo."
+            );
+
+            return;
+
+        }
+
+
+        /*
+           Procuramos uma dívida que tenha
+           a mesma direção.
+
+           O valor_pago será usado apenas
+           para controlar o pagamento.
+        */
 
         const {
             data: dividas,
@@ -1606,14 +1808,12 @@ async function registarPagamento(
                 )
                 .select(
                     "id, valor, valor_pago, devedor_id, credor_id"
-                )
-                .eq(
-                    "liquidado",
-                    false
                 );
 
 
-        if (error) {
+        if (
+            error
+        ) {
 
             throw new Error(
                 error.message
@@ -1637,6 +1837,7 @@ async function registarPagamento(
             ) {
 
                 break;
+
             }
 
 
@@ -1656,51 +1857,25 @@ async function registarPagamento(
             ) {
 
                 continue;
+
             }
 
 
-            const pago =
+            const pagoAtual =
                 Number(
                     divida.valor_pago ||
                     0
                 );
 
 
-            const falta =
-                Math.max(
-                    0,
-                    Number(
-                        divida.valor
-                    ) -
-                    pago
-                );
-
-
-            if (
-                falta <=
-                0
-            ) {
-
-                continue;
-            }
-
-
             const aplicar =
-                Math.min(
-                    restante,
-                    falta
-                );
+                restante;
 
 
-            const novoValorPago =
-                pago +
-                aplicar;
-
-
-            const liquidado =
-                novoValorPago >=
-                Number(
-                    divida.valor
+            const novoPagamento =
+                arredondarCentimos(
+                    pagoAtual +
+                    aplicar
                 );
 
 
@@ -1715,10 +1890,13 @@ async function registarPagamento(
                     .update({
 
                         valor_pago:
-                            novoValorPago,
+                            novoPagamento,
 
                         liquidado:
-                            liquidado
+                            novoPagamento >=
+                            Number(
+                                divida.valor
+                            )
 
                     })
                     .eq(
@@ -1738,14 +1916,36 @@ async function registarPagamento(
             }
 
 
-            restante -=
-                aplicar;
+            restante =
+                0;
+
+        }
+
+
+        /*
+           Se não encontrámos uma dívida
+           correspondente, não escondemos
+           o problema.
+        */
+
+        if (
+            restante >
+            0
+        ) {
+
+            alert(
+                "Não foi encontrada uma dívida correspondente para registar este pagamento."
+            );
+
+            return;
 
         }
 
 
         alert(
-            "Pagamento registado com sucesso."
+            `Pagamento de ${euro(
+                valorPagamento
+            )} registado.`
         );
 
 
@@ -1884,127 +2084,8 @@ async function atualizarDashboard() {
             );
 
 
-        const {
-            data: dividas
-        } =
-            await supabaseClient
-                .from(
-                    "dividas"
-                )
-                .select(
-                    "valor, valor_pago, devedor_id, credor_id"
-                )
-                .eq(
-                    "liquidado",
-                    false
-                );
-
-
-        const saldos = {};
-
-
-        (
-            dividas ||
-            []
-        )
-        .forEach(
-            divida => {
-
-                const devedor =
-                    Number(
-                        divida.devedor_id
-                    );
-
-
-                const credor =
-                    Number(
-                        divida.credor_id
-                    );
-
-
-                const falta =
-                    Math.max(
-                        0,
-                        Number(
-                            divida.valor
-                        ) -
-                        Number(
-                            divida.valor_pago ||
-                            0
-                        )
-                    );
-
-
-                if (
-                    falta <=
-                    0
-                ) {
-
-                    return;
-                }
-
-
-                const ids = [
-                    devedor,
-                    credor
-                ].sort(
-                    (
-                        a,
-                        b
-                    ) =>
-                        a - b
-                );
-
-
-                const chave =
-                    `${ids[0]}-${ids[1]}`;
-
-
-                if (
-                    !saldos[
-                        chave
-                    ]
-                ) {
-
-                    saldos[
-                        chave
-                    ] = {
-
-                        a:
-                            ids[0],
-
-                        b:
-                            ids[1],
-
-                        saldo:
-                            0
-
-                    };
-
-                }
-
-
-                if (
-                    devedor ===
-                    ids[0]
-                ) {
-
-                    saldos[
-                        chave
-                    ].saldo +=
-                        falta;
-
-                } else {
-
-                    saldos[
-                        chave
-                    ].saldo -=
-                        falta;
-
-                }
-
-            }
-        );
+        const resultado =
+            await calcularSaldo50x50();
 
 
         const saldoAtual =
@@ -2013,16 +2094,9 @@ async function atualizarDashboard() {
             );
 
 
-        const primeiroSaldo =
-            Object.values(
-                saldos
-            )[0];
-
-
         if (
-            !primeiroSaldo ||
             Math.abs(
-                primeiroSaldo.saldo
+                resultado.saldo
             ) <
             0.005
         ) {
@@ -2030,46 +2104,33 @@ async function atualizarDashboard() {
             saldoAtual.textContent =
                 "Ninguém deve nada";
 
+            return;
+
+        }
+
+
+        if (
+            resultado.saldo >
+            0
+        ) {
+
+            saldoAtual.textContent =
+                `${resultado.nomePessoa2} deve ${
+                    euro(
+                        resultado.saldo
+                    )
+                } a ${resultado.nomePessoa1}`;
+
         } else {
 
-            const nomeA =
-                nomes[
-                    primeiroSaldo.a
-                ] ||
-                "Pessoa A";
-
-
-            const nomeB =
-                nomes[
-                    primeiroSaldo.b
-                ] ||
-                "Pessoa B";
-
-
-            if (
-                primeiroSaldo.saldo >
-                0
-            ) {
-
-                saldoAtual.textContent =
-                    `${nomeA} deve ${
-                        euro(
-                            primeiroSaldo.saldo
+            saldoAtual.textContent =
+                `${resultado.nomePessoa1} deve ${
+                    euro(
+                        Math.abs(
+                            resultado.saldo
                         )
-                    } a ${nomeB}`;
-
-            } else {
-
-                saldoAtual.textContent =
-                    `${nomeB} deve ${
-                        euro(
-                            Math.abs(
-                                primeiroSaldo.saldo
-                            )
-                        )
-                    } a ${nomeA}`;
-
-            }
+                    )
+                } a ${resultado.nomePessoa2}`;
 
         }
 
@@ -2104,6 +2165,7 @@ async function atualizarGrafico() {
     ) {
 
         return;
+
     }
 
 
@@ -2170,6 +2232,7 @@ async function atualizarGrafico() {
     ) {
 
         return;
+
     }
 
 
@@ -2444,115 +2507,8 @@ async function obterResumoMensal(
     );
 
 
-    const {
-        data: dividas,
-        error
-    } =
-        await supabaseClient
-            .from(
-                "dividas"
-            )
-            .select(
-                "valor, valor_pago, devedor_id, credor_id, liquidado"
-            )
-            .eq(
-                "liquidado",
-                false
-            );
-
-
-    if (error) {
-
-        throw new Error(
-            error.message
-        );
-
-    }
-
-
-    let nataliaDeveHugo =
-        0;
-
-    let hugoDeveNatalia =
-        0;
-
-
-    (
-        dividas ||
-        []
-    )
-    .forEach(
-        divida => {
-
-            const falta =
-                Math.max(
-                    0,
-                    Number(
-                        divida.valor
-                    ) -
-                    Number(
-                        divida.valor_pago ||
-                        0
-                    )
-                );
-
-
-            if (
-                falta <=
-                0
-            ) {
-
-                return;
-            }
-
-
-            const pessoa =
-                pessoas.find(
-                    item =>
-                        Number(
-                            item.id
-                        ) ===
-                        Number(
-                            divida.devedor_id
-                        )
-                );
-
-
-            const nome =
-                (
-                    pessoa?.nome ||
-                    ""
-                )
-                .toLowerCase();
-
-
-            if (
-                nome.includes(
-                    "natalia"
-                )
-            ) {
-
-                nataliaDeveHugo +=
-                    falta;
-
-            } else if (
-                nome.includes(
-                    "hugo"
-                )
-            ) {
-
-                hugoDeveNatalia +=
-                    falta;
-
-            }
-
-        }
-    );
-
-
-    const saldo =
-        nataliaDeveHugo -
-        hugoDeveNatalia;
+    const resultadoSaldo =
+        await calcularSaldo50x50();
 
 
     let textoSaldo;
@@ -2560,7 +2516,7 @@ async function obterResumoMensal(
 
     if (
         Math.abs(
-            saldo
+            resultadoSaldo.saldo
         ) <
         0.005
     ) {
@@ -2569,24 +2525,27 @@ async function obterResumoMensal(
             "Ninguém deve nada.";
 
     } else if (
-        saldo > 0
+        resultadoSaldo.saldo >
+        0
     ) {
 
         textoSaldo =
-            `Natalia deve ${
-                euro(saldo)
-            } a Hugo.`;
+            `${resultadoSaldo.nomePessoa2} deve ${
+                euro(
+                    resultadoSaldo.saldo
+                )
+            } a ${resultadoSaldo.nomePessoa1}.`;
 
     } else {
 
         textoSaldo =
-            `Hugo deve ${
+            `${resultadoSaldo.nomePessoa1} deve ${
                 euro(
                     Math.abs(
-                        saldo
+                        resultadoSaldo.saldo
                     )
                 )
-            } a Natalia.`;
+            } a ${resultadoSaldo.nomePessoa2}.`;
 
     }
 
@@ -2594,39 +2553,30 @@ async function obterResumoMensal(
     return {
 
         mes:
-
             mes,
 
         despesas:
-
             despesasMes,
 
         total:
-
             total,
 
         totalHugo:
-
             totalHugo,
 
         totalNatalia:
-
             totalNatalia,
 
         partilhadas:
-
             partilhadas,
 
         pessoaisHugo:
-
             pessoaisHugo,
 
         pessoaisNatalia:
-
             pessoaisNatalia,
 
         textoSaldo:
-
             textoSaldo
 
     };

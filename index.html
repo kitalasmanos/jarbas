@@ -33,44 +33,11 @@
 
 <header class="header">
 
-    <div
-        style="
-            max-width: 1200px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            flex-wrap: wrap;
-        "
-    >
+    <h1>💰 Gestor Financeiro</h1>
 
-        <div>
-
-            <h1>💰 Gestor Financeiro</h1>
-
-            <p>
-                Despesas pessoais · Despesas partilhadas · Saldos
-            </p>
-
-        </div>
-
-
-        <button
-            id="logoutButton"
-            type="button"
-            onclick="fazerLogout()"
-            style="
-                background: rgba(255,255,255,0.18);
-                border: 1px solid rgba(255,255,255,0.35);
-                color: white;
-                white-space: nowrap;
-            "
-        >
-            🚪 Terminar sessão
-        </button>
-
-    </div>
+    <p>
+        Despesas pessoais · Despesas partilhadas · Saldos
+    </p>
 
 </header>
 
@@ -159,6 +126,28 @@
     class="container"
     style="display: none;"
 >
+
+
+    <!-- =====================================
+         TERMINAR SESSÃO
+    ====================================== -->
+
+    <div
+        style="
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 16px;
+        "
+    >
+
+        <button
+            type="button"
+            onclick="fazerLogout()"
+        >
+            🚪 Terminar sessão
+        </button>
+
+    </div>
 
 
     <!-- =====================================
@@ -426,6 +415,7 @@
 
         <div class="form-grid">
 
+
             <div>
 
                 <label for="pesquisa">
@@ -602,6 +592,7 @@
 ===================================== -->
 
 <script src="supabase.js?v=20"></script>
+
 <script src="app.js?v=19"></script>
 
 

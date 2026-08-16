@@ -483,152 +483,62 @@ async function obterDespesas() {
 }
 
 
-async function eliminarDespesa(
-    id
-) {
+async function eliminarDespesa(id) {
 
-    const despesa =
-        (
-            await supabaseClient
-                .from(
-                    "despesas_partilhadas"
-                )
-                .select(
-                    "id, descricao, valor"
-                )
-                .eq(
-                    "id",
-                    id
-                )
-                .single()
-        ).data;
+    const confirmar = confirm(
+        "Tem a certeza que pretende eliminar esta despesa?"
+    );
 
-
-    if (!despesa) {
-
-        alert(
-            "Despesa não encontrada."
-        );
-
+    if (!confirmar) {
         return;
-
     }
-
-
-    const confirmar =
-        confirm(
-            `Eliminar "${despesa.descricao}" de ${euro(
-                despesa.valor
-            )}?`
-        );
-
-
-    if (
-        !confirmar
-    ) {
-
-        return;
-
-    }
-
 
     try {
 
-        /*
-           Primeiro removemos as dívidas
-           associadas.
-        */
-
-        const {
-            error:
-                erroDivida
-        } =
+        const { error: erroDivida } =
             await supabaseClient
-                .from(
-                    "dividas"
-                )
+                .from("dividas")
                 .delete()
-                .eq(
-                    "despesa_id",
-                    id
-                );
+                .eq("despesa_id", id);
 
-
-        if (
-            erroDivida
-        ) {
-
+        if (erroDivida) {
             throw new Error(
                 "Erro ao eliminar a dívida: " +
                 erroDivida.message
             );
-
         }
 
-
-        /*
-           Depois removemos a despesa.
-        */
-
-        const {
-            error:
-                erroDespesa
-        } =
+        const { error: erroDespesa } =
             await supabaseClient
-                .from(
-                    "despesas_partilhadas"
-                )
+                .from("despesas_partilhadas")
                 .delete()
-                .eq(
-                    "id",
-                    id
-                );
+                .eq("id", id);
 
-
-        if (
-            erroDespesa
-        ) {
-
+        if (erroDespesa) {
             throw new Error(
                 "Erro ao eliminar a despesa: " +
                 erroDespesa.message
             );
-
         }
 
-
-        /*
-           Remover categoria local.
-        */
-
-        if (
-            dados.categoriasLocais
-        ) {
-
-            delete dados.categoriasLocais[
-                id
-            ];
-
+        if (dados.categoriasLocais) {
+            delete dados.categoriasLocais[id];
             guardarDadosLocais();
-
         }
-
 
         await atualizarTudo();
 
+        alert("Despesa eliminada com sucesso.");
 
     } catch (error) {
 
-        console.error(
-            error
-        );
+        console.error(error);
 
         alert(
+            "Não foi possível eliminar:\n\n" +
             error.message
         );
-
     }
-
 }
 
 

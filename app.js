@@ -1455,84 +1455,359 @@ async function atualizarGrafico() {
 
 async function atualizarResumo() {
 
-    const despesas =
-        await carregarDespesas();
+    const totalDespesasElemento =
+        document.getElementById(
+            "totalDespesas"
+        );
+
+    const totalPagoHugoElemento =
+        document.getElementById(
+            "totalPagoHugo"
+        );
+
+    const totalPagoNataliaElemento =
+        document.getElementById(
+            "totalPagoNatalia"
+        );
+
+    const saldoElemento =
+        document.getElementById(
+            "saldoAtual"
+        );
 
 
-    let totalDespesas =
-        0;
+    if (
+        !totalDespesasElemento ||
+        !totalPagoHugoElemento ||
+        !totalPagoNataliaElemento ||
+        !saldoElemento
+    ) {
+        return;
+    }
+
+
+    totalDespesasElemento.textContent =
+        "A carregar...";
+
+    totalPagoHugoElemento.textContent =
+        "A carregar...";
+
+    totalPagoNataliaElemento.textContent =
+        "A carregar...";
+
+    saldoElemento.textContent =
+        "A calcular...";
+
+
+    /* =================================
+       DESPESAS
+    ================================= */
+
+    const {
+        data: despesas,
+        error: erroDespesas
+    } =
+        await supabaseClient
+            .from("despesas_partilhadas")
+            .select(
+                "id, valor, pagador_id"
+            );
+
+
+    if (erroDespesas) {
+
+        console.error(
+            erroDespesas
+        );
+
+        totalDespesasElemento.textContent =
+            "Erro";
+
+        totalPagoHugoElemento.textContent =
+            "Erro";
+
+        totalPagoNataliaElemento.textContent =
+            "Erro";
+
+        saldoElemento.textContent =
+            "Erro";
+
+        return;
+    }
+
+
+    /* =================================
+       PESSOAS
+    ================================= */
+
+    const {
+        data: pessoas,
+        error: erroPessoas
+    } =
+        await supabaseClient
+            .from("pessoas")
+            .select(
+                "id, nome"
+            );
+
+
+    if (erroPessoas) {
+
+        console.error(
+            erroPessoas
+        );
+
+        return;
+    }
+
+
+    const nomes = {};
+
+    pessoas.forEach(
+        pessoa => {
+
+            nomes[
+                Number(pessoa.id)
+            ] = pessoa.nome;
+
+        }
+    );
+
+
+    let totalDespesas = 0;
+
+    let totalHugo = 0;
+
+    let totalNatalia = 0;
 
 
     despesas.forEach(
         despesa => {
 
-            totalDespesas +=
+            const valor =
                 Number(
                     despesa.valor
                 );
 
+
+            totalDespesas +=
+                valor;
+
+
+            const nomePagador =
+                nomes[
+                    Number(
+                        despesa.pagador_id
+                    )
+                ];
+
+
+            if (
+                nomePagador &&
+                nomePagador.toLowerCase()
+                    .includes("hugo")
+            ) {
+
+                totalHugo +=
+                    valor;
+
+            }
+
+
+            if (
+                nomePagador &&
+                nomePagador.toLowerCase()
+                    .includes("natalia")
+            ) {
+
+                totalNatalia +=
+                    valor;
+
+            }
+
         }
     );
 
 
+    /* =================================
+       SALDO ENTRE HUGO E NATALIA
+    ================================= */
+
     const {
-        data: dividas
+        data: dividas,
+        error: erroDividas
     } =
         await supabaseClient
             .from("dividas")
             .select(
-                "valor, valor_pago, liquidado"
+                "valor, valor_pago, devedor_id, credor_id, liquidado"
             );
 
 
-    let totalDevido =
-        0;
+    if (erroDividas) {
+
+        console.error(
+            erroDividas
+        );
+
+        saldoElemento.textContent =
+            "Erro";
+
+    } else {
+
+        const saldos = {};
+
+        (dividas || [])
+            .forEach(
+                divida => {
+
+                    const valorEmFalta =
+                        Math.max(
+                            0,
+                            Number(
+                                divida.valor
+                            ) -
+                            Number(
+                                divida.valor_pago ||
+                                0
+                            )
+                        );
 
 
-    (
-        dividas ||
-        []
-    )
-    .forEach(
-        divida => {
+                    if (
+                        valorEmFalta <= 0
+                    ) {
+                        return;
+                    }
 
-            totalDevido +=
-                Math.max(
-                    0,
-                    Number(
-                        divida.valor
-                    ) -
-                    Number(
-                        divida.valor_pago ||
-                        0
+
+                    const devedor =
+                        Number(
+                            divida.devedor_id
+                        );
+
+                    const credor =
+                        Number(
+                            divida.credor_id
+                        );
+
+
+                    const chave =
+                        "hugo-natalia";
+
+
+                    if (
+                        !saldos[chave]
+                    ) {
+
+                        saldos[chave] =
+                            {
+                                hugoDeveNatalia:
+                                    0,
+
+                                nataliaDeveHugo:
+                                    0
+                            };
+
+                    }
+
+
+                    const nomeDevedor =
+                        (
+                            nomes[
+                                devedor
+                            ] ||
+                            ""
+                        )
+                            .toLowerCase();
+
+
+                    if (
+                        nomeDevedor
+                            .includes("hugo")
+                    ) {
+
+                        saldos[chave]
+                            .hugoDeveNatalia +=
+                            valorEmFalta;
+
+                    } else {
+
+                        saldos[chave]
+                            .nataliaDeveHugo +=
+                            valorEmFalta;
+
+                    }
+
+                }
+            );
+
+
+        const saldoHugo =
+            saldos["hugo-natalia"]
+                ?.hugoDeveNatalia ||
+            0;
+
+        const saldoNatalia =
+            saldos["hugo-natalia"]
+                ?.nataliaDeveHugo ||
+            0;
+
+
+        const saldoLiquido =
+            saldoNatalia -
+            saldoHugo;
+
+
+        if (
+            Math.abs(
+                saldoLiquido
+            ) < 0.005
+        ) {
+
+            saldoElemento.textContent =
+                "Ninguém deve nada";
+
+        } else if (
+            saldoLiquido > 0
+        ) {
+
+            saldoElemento.textContent =
+                `Natalia deve ${
+                    euro(
+                        saldoLiquido
                     )
-                );
+                } a Hugo`;
+
+        } else {
+
+            saldoElemento.textContent =
+                `Hugo deve ${
+                    euro(
+                        Math.abs(
+                            saldoLiquido
+                        )
+                    )
+                } a Natalia`;
 
         }
-    );
+
+    }
 
 
-    document.getElementById(
-        "saldoAtual"
-    ).textContent =
+    totalDespesasElemento.textContent =
         euro(
             totalDespesas
         );
 
-
-    document.getElementById(
-        "totalReceitas"
-    ).textContent =
+    totalPagoHugoElemento.textContent =
         euro(
-            totalDevido
+            totalHugo
         );
 
-
-    document.getElementById(
-        "totalDespesas"
-    ).textContent =
+    totalPagoNataliaElemento.textContent =
         euro(
-            totalDespesas
+            totalNatalia
         );
 
 }

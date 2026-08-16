@@ -308,7 +308,6 @@
 
         <h2>📅 Histórico de Despesas</h2>
 
-
         <div class="form-grid">
 
 
@@ -365,6 +364,18 @@
                     onclick="limparFiltros()"
                 >
                     Limpar filtros
+                </button>
+
+            </div>
+
+
+            <div class="form-button">
+
+                <button
+                    type="button"
+                    onclick="fecharMesAtual()"
+                >
+                    📧 Fechar mês
                 </button>
 
             </div>
@@ -462,27 +473,14 @@
 </footer>
 
 
-<!-- =====================================
-     BIBLIOTECAS
-===================================== -->
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-
-<!-- =====================================
-     APLICAÇÃO
-===================================== -->
 
 <script src="supabase.js"></script>
 
 <script src="app.js"></script>
 
-
-<!-- =====================================
-     SERVICE WORKER
-===================================== -->
 
 <script>
 

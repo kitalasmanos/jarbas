@@ -29,7 +29,6 @@
 
 </head>
 
-
 <body>
 
 <header class="header">
@@ -37,7 +36,7 @@
     <h1>💰 Gestor Financeiro</h1>
 
     <p>
-        Despesas · Contas · Quem deve a quem
+        Despesas pessoais · Despesas partilhadas · Saldos
     </p>
 
 </header>
@@ -47,53 +46,70 @@
 
 
     <!-- =====================================
-         RESUMO
+         DASHBOARD
     ====================================== -->
 
-<section class="card">
+    <section class="card">
 
-    <h2>📊 Resumo</h2>
+        <h2>📊 Resumo</h2>
 
-    <div class="dashboard">
+        <div class="dashboard">
 
-        <div class="stat-card despesa">
-            <span>Total de despesas</span>
+            <div class="stat-card despesa">
 
-            <strong id="totalDespesas">
-                0,00 €
-            </strong>
+                <span>
+                    Total de despesas
+                </span>
+
+                <strong id="totalDespesas">
+                    0,00 €
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card saldo">
+
+                <span>
+                    Saldo atual
+                </span>
+
+                <strong id="saldoAtual">
+                    A calcular...
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Pago pelo Hugo
+                </span>
+
+                <strong id="totalPagoHugo">
+                    0,00 €
+                </strong>
+
+            </div>
+
+
+            <div class="stat-card">
+
+                <span>
+                    Pago pela Natalia
+                </span>
+
+                <strong id="totalPagoNatalia">
+                    0,00 €
+                </strong>
+
+            </div>
+
         </div>
 
+    </section>
 
-        <div class="stat-card">
-            <span>Pago pelo Hugo</span>
-
-            <strong id="totalPagoHugo">
-                0,00 €
-            </strong>
-        </div>
-
-
-        <div class="stat-card">
-            <span>Pago pela Natalia</span>
-
-            <strong id="totalPagoNatalia">
-                0,00 €
-            </strong>
-        </div>
-
-
-        <div class="stat-card saldo">
-            <span>Saldo atual</span>
-
-            <strong id="saldoAtual">
-                A calcular...
-            </strong>
-        </div>
-
-    </div>
-
-</section>
 
     <!-- =====================================
          NOVA DESPESA
@@ -104,12 +120,33 @@
         <h2>➕ Nova Despesa</h2>
 
         <p class="section-help">
-            Todas as despesas são divididas 50/50.
-            Escolhe apenas quem pagou.
+            Escolhe entre uma despesa pessoal ou uma despesa
+            partilhada a 50/50.
         </p>
 
 
         <div class="form-grid">
+
+
+            <div>
+
+                <label for="tipoDespesa">
+                    Tipo de despesa
+                </label>
+
+                <select id="tipoDespesa">
+
+                    <option value="partilhada">
+                        Partilhada 50/50
+                    </option>
+
+                    <option value="pessoal">
+                        Pessoal
+                    </option>
+
+                </select>
+
+            </div>
 
 
             <div>
@@ -135,47 +172,47 @@
 
                 <select id="categoria">
 
-                    <option>
+                    <option value="Supermercado">
                         Supermercado
                     </option>
 
-                    <option>
+                    <option value="Água">
                         Água
                     </option>
 
-                    <option>
+                    <option value="Luz">
                         Luz
                     </option>
 
-                    <option>
+                    <option value="Gás">
                         Gás
                     </option>
 
-                    <option>
+                    <option value="Gasolina">
                         Gasolina
                     </option>
 
-                    <option>
+                    <option value="Casa">
                         Casa
                     </option>
 
-                    <option>
+                    <option value="Comer Fora">
                         Comer Fora
                     </option>
 
-                    <option>
+                    <option value="Lazer">
                         Lazer
                     </option>
 
-                    <option>
+                    <option value="Saúde">
                         Saúde
                     </option>
 
-                    <option>
+                    <option value="Telecomunicações">
                         Telecomunicações
                     </option>
 
-                    <option>
+                    <option value="Outros">
                         Outros
                     </option>
 
@@ -210,7 +247,7 @@
                 <select id="pagador">
 
                     <option value="">
-                        A carregar...
+                        A carregar pessoas...
                     </option>
 
                 </select>
@@ -243,14 +280,13 @@
 
             </div>
 
-
         </div>
 
     </section>
 
 
     <!-- =====================================
-         SALDO ENTRE PESSOAS
+         SALDO
     ====================================== -->
 
     <section class="card">
@@ -270,15 +306,16 @@
 
     <section class="card">
 
-        <h2>📅 Histórico</h2>
+        <h2>📅 Histórico de Despesas</h2>
 
 
         <div class="form-grid">
 
+
             <div>
 
                 <label for="pesquisa">
-                    Pesquisar
+                    Pesquisa
                 </label>
 
                 <input
@@ -320,13 +357,14 @@
 
             </div>
 
+
             <div class="form-button">
 
                 <button
                     type="button"
                     onclick="limparFiltros()"
                 >
-                    Limpar
+                    Limpar filtros
                 </button>
 
             </div>
@@ -345,9 +383,10 @@
                         <th>Data</th>
                         <th>Descrição</th>
                         <th>Categoria</th>
+                        <th>Tipo</th>
                         <th>Valor</th>
                         <th>Pagou</th>
-                        <th>Parte do outro</th>
+                        <th>Ações</th>
 
                     </tr>
 
@@ -418,7 +457,7 @@
 
 <footer class="footer">
 
-    Gestor Financeiro © Hugo Pires 2026
+    Gestor Financeiro © 2026
 
 </footer>
 
@@ -441,15 +480,16 @@
         navigator.serviceWorker.register(
             "service-worker.js"
         ).catch(
-            error => console.error(
-                error
-            )
+            error =>
+                console.error(
+                    "Erro no Service Worker:",
+                    error
+                )
         );
 
     }
 
 </script>
-
 
 </body>
 

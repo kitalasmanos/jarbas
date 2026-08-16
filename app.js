@@ -1,14 +1,20 @@
 /* =====================================
-   GESTOR FINANCEIRO 50/50
+   GESTOR FINANCEIRO
 ===================================== */
 
-const STORAGE_KEY = "gestor-financeiro-50-50";
+const STORAGE_KEY =
+    "gestor-financeiro-dados";
 
-let dados = JSON.parse(
-    localStorage.getItem(STORAGE_KEY)
-) || {
-    movimentos: []
-};
+
+let dados =
+    JSON.parse(
+        localStorage.getItem(
+            STORAGE_KEY
+        )
+    ) || {
+        categoriasLocais: {}
+    };
+
 
 let grafico = null;
 
@@ -17,7 +23,7 @@ let grafico = null;
    UTILIDADES
 ===================================== */
 
-function guardarDados() {
+function guardarDadosLocais() {
 
     localStorage.setItem(
         STORAGE_KEY,
@@ -53,12 +59,29 @@ function hojeISO() {
 
 function escapeHTML(valor) {
 
-    return String(valor)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
+    return String(
+        valor ?? ""
+    )
+        .replaceAll(
+            "&",
+            "&amp;"
+        )
+        .replaceAll(
+            "<",
+            "&lt;"
+        )
+        .replaceAll(
+            ">",
+            "&gt;"
+        )
+        .replaceAll(
+            '"',
+            "&quot;"
+        )
+        .replaceAll(
+            "'",
+            "&#039;"
+        );
 
 }
 
@@ -67,19 +90,7 @@ function escapeHTML(valor) {
    PESSOAS
 ===================================== */
 
-async function carregarPessoas() {
-
-    const select =
-        document.getElementById(
-            "pagador"
-        );
-
-    if (!select) {
-        return [];
-    }
-
-    select.innerHTML =
-        '<option value="">A carregar...</option>';
+async function obterPessoas() {
 
     const {
         data,
@@ -87,81 +98,102 @@ async function carregarPessoas() {
     } =
         await supabaseClient
             .from("pessoas")
-            .select("id, nome")
-            .order("nome");
+            .select(
+                "id, nome"
+            )
+            .order(
+                "nome"
+            );
 
     if (error) {
+
+        throw new Error(
+            error.message
+        );
+
+    }
+
+    return data || [];
+
+}
+
+
+async function carregarPagadores() {
+
+    const select =
+        document.getElementById(
+            "pagador"
+        );
+
+    if (!select) {
+        return;
+    }
+
+    try {
+
+        const pessoas =
+            await obterPessoas();
+
+
+        select.innerHTML =
+            '<option value="">Selecionar pessoa</option>';
+
+
+        pessoas.forEach(
+            pessoa => {
+
+                const option =
+                    document.createElement(
+                        "option"
+                    );
+
+                option.value =
+                    pessoa.id;
+
+                option.textContent =
+                    pessoa.nome;
+
+                select.appendChild(
+                    option
+                );
+
+            }
+        );
+
+    } catch (error) {
 
         console.error(
             error
         );
 
         select.innerHTML =
-            '<option value="">Erro ao carregar</option>';
-
-        return [];
+            '<option value="">Erro ao carregar pessoas</option>';
 
     }
-
-    select.innerHTML =
-        '<option value="">Selecionar pessoa</option>';
-
-    data.forEach(
-        pessoa => {
-
-            const option =
-                document.createElement(
-                    "option"
-                );
-
-            option.value =
-                pessoa.id;
-
-            option.textContent =
-                pessoa.nome;
-
-            select.appendChild(
-                option
-            );
-
-        }
-    );
-
-    return data;
 
 }
 
 
 /* =====================================
-   PAGADOR → OUTRA PESSOA
+   DATA
 ===================================== */
 
-function obterOutroId(
-    pessoas,
-    pagadorId
-) {
+function prepararData() {
 
-    const pessoa =
-        pessoas.find(
-            p =>
-                Number(p.id) ===
-                Number(pagadorId)
+    const input =
+        document.getElementById(
+            "dataDespesa"
         );
 
-    if (!pessoa) {
-        return null;
+    if (
+        input &&
+        !input.value
+    ) {
+
+        input.value =
+            hojeISO();
+
     }
-
-    const outraPessoa =
-        pessoas.find(
-            p =>
-                Number(p.id) !==
-                Number(pagadorId)
-        );
-
-    return outraPessoa
-        ? Number(outraPessoa.id)
-        : null;
 
 }
 
@@ -172,15 +204,24 @@ function obterOutroId(
 
 async function registarDespesa() {
 
+    const tipo =
+        document.getElementById(
+            "tipoDespesa"
+        ).value;
+
+
     const descricao =
         document.getElementById(
             "descricao"
-        ).value.trim();
+        ).value
+            .trim();
+
 
     const categoria =
         document.getElementById(
             "categoria"
         ).value;
+
 
     const valor =
         Number(
@@ -189,12 +230,14 @@ async function registarDespesa() {
             ).value
         );
 
+
     const pagadorId =
         Number(
             document.getElementById(
                 "pagador"
             ).value
         );
+
 
     const data =
         document.getElementById(
@@ -209,11 +252,14 @@ async function registarDespesa() {
         );
 
         return;
+
     }
 
 
     if (
-        !Number.isFinite(valor) ||
+        !Number.isFinite(
+            valor
+        ) ||
         valor <= 0
     ) {
 
@@ -222,6 +268,7 @@ async function registarDespesa() {
         );
 
         return;
+
     }
 
 
@@ -232,6 +279,7 @@ async function registarDespesa() {
         );
 
         return;
+
     }
 
 
@@ -242,197 +290,229 @@ async function registarDespesa() {
         );
 
         return;
+
     }
 
 
-    /* =================================
-       CARREGAR AS PESSOAS
-    ================================= */
+    try {
 
-    const {
-        data: pessoas,
-        error: erroPessoas
-    } =
-        await supabaseClient
-            .from("pessoas")
-            .select("id, nome")
-            .order("nome");
+        const pessoas =
+            await obterPessoas();
 
 
-    if (erroPessoas) {
+        if (
+            pessoas.length !== 2
+        ) {
 
-        alert(
-            "Erro ao carregar pessoas:\n" +
-            erroPessoas.message
-        );
+            alert(
+                "A aplicação necessita de exatamente duas pessoas."
+            );
 
-        return;
-    }
+            return;
 
-
-    if (
-        pessoas.length !== 2
-    ) {
-
-        alert(
-            "O sistema 50/50 precisa de exatamente 2 pessoas."
-        );
-
-        return;
-    }
+        }
 
 
-    const devedorId =
-        obterOutroId(
-            pessoas,
-            pagadorId
-        );
+        const outraPessoa =
+            pessoas.find(
+                pessoa =>
+                    Number(
+                        pessoa.id
+                    ) !==
+                    pagadorId
+            );
 
 
-    if (!devedorId) {
+        if (
+            !outraPessoa
+        ) {
 
-        alert(
-            "Não foi possível determinar a outra pessoa."
-        );
+            alert(
+                "Não foi possível determinar a outra pessoa."
+            );
 
-        return;
-    }
+            return;
 
-
-    /* =================================
-       CALCULAR METADE
-    ================================= */
-
-    const valorDevido =
-        Math.round(
-            (
-                valor / 2
-            ) * 100
-        ) / 100;
+        }
 
 
-    /* =================================
-       CRIAR DESPESA PARTILHADA
-    ================================= */
-
-    const {
-        data: despesa,
-        error: erroDespesa
-    } =
-        await supabaseClient
-            .from(
-                "despesas_partilhadas"
-            )
-            .insert([
-                {
-                    descricao:
-                        descricao,
-
-                    valor:
-                        valor,
-
-                    pagador_id:
-                        pagadorId,
-
-                    data:
-                        data
-                }
-            ])
-            .select("id")
-            .single();
+        const partilhada =
+            tipo ===
+            "partilhada";
 
 
-    if (erroDespesa) {
+        /* ==============================
+           DESPESA
+        ============================== */
 
-        console.error(
+        const {
+            data: despesa,
+            error: erroDespesa
+        } =
+            await supabaseClient
+                .from(
+                    "despesas_partilhadas"
+                )
+                .insert([
+                    {
+                        descricao:
+                            descricao,
+
+                        valor:
+                            valor,
+
+                        pagador_id:
+                            pagadorId,
+
+                        data:
+                            data,
+
+                        partilhada:
+                            partilhada
+                    }
+                ])
+                .select(
+                    "id"
+                )
+                .single();
+
+
+        if (
             erroDespesa
-        );
+        ) {
+
+            throw new Error(
+                "Erro ao criar despesa: " +
+                erroDespesa.message
+            );
+
+        }
+
+
+        /* ==============================
+           GUARDAR CATEGORIA LOCALMENTE
+        ============================== */
+
+        dados.categoriasLocais =
+            dados.categoriasLocais ||
+            {};
+
+
+        dados.categoriasLocais[
+            despesa.id
+        ] =
+            categoria;
+
+
+        guardarDadosLocais();
+
+
+        /* ==============================
+           DÍVIDA 50/50
+        ============================== */
+
+        if (
+            partilhada
+        ) {
+
+            const valorDevido =
+                Math.round(
+                    (
+                        valor / 2
+                    ) * 100
+                ) / 100;
+
+
+            const {
+                error: erroDivida
+            } =
+                await supabaseClient
+                    .from(
+                        "dividas"
+                    )
+                    .insert([
+                        {
+
+                            despesa_id:
+                                despesa.id,
+
+                            devedor_id:
+                                outraPessoa.id,
+
+                            credor_id:
+                                pagadorId,
+
+                            valor:
+                                valorDevido,
+
+                            valor_pago:
+                                0,
+
+                            liquidado:
+                                false
+
+                        }
+                    ]);
+
+
+            if (
+                erroDivida
+            ) {
+
+                throw new Error(
+                    "A despesa foi criada, mas a dívida falhou: " +
+                    erroDivida.message
+                );
+
+            }
+
+        }
+
+
+        /* ==============================
+           LIMPAR
+        ============================== */
+
+        document.getElementById(
+            "descricao"
+        ).value = "";
+
+
+        document.getElementById(
+            "valor"
+        ).value = "";
+
 
         alert(
-            "Erro ao criar despesa:\n\n" +
-            erroDespesa.message
+            partilhada
+                ? "Despesa partilhada registada com sucesso!"
+                : "Despesa pessoal registada com sucesso!"
         );
 
-        return;
-    }
+
+        await atualizarTudo();
 
 
-    /* =================================
-       CRIAR DÍVIDA 50/50
-    ================================= */
-
-    const {
-        error: erroDivida
-    } =
-        await supabaseClient
-            .from("dividas")
-            .insert([
-                {
-                    despesa_id:
-                        despesa.id,
-
-                    devedor_id:
-                        devedorId,
-
-                    credor_id:
-                        pagadorId,
-
-                    valor:
-                        valorDevido,
-
-                    valor_pago:
-                        0,
-
-                    liquidado:
-                        false
-                }
-            ]);
-
-
-    if (erroDivida) {
+    } catch (error) {
 
         console.error(
-            erroDivida
+            error
         );
 
         alert(
-            "A despesa foi criada, mas a dívida não foi criada:\n\n" +
-            erroDivida.message
+            error.message
         );
 
-        return;
     }
-
-
-    /* =================================
-       LIMPAR FORMULÁRIO
-    ================================= */
-
-    document.getElementById(
-        "descricao"
-    ).value = "";
-
-    document.getElementById(
-        "valor"
-    ).value = "";
-
-
-    alert(
-        "Despesa registada com sucesso!"
-    );
-
-
-    await atualizarTudo();
-
 
 }
 
 
 /* =====================================
-   HISTÓRICO
+   DESPESAS
 ===================================== */
 
-async function carregarDespesas() {
+async function obterDespesas() {
 
     const {
         data,
@@ -443,181 +523,183 @@ async function carregarDespesas() {
                 "despesas_partilhadas"
             )
             .select(
-                "id, descricao, valor, pagador_id, data"
+                "id, descricao, valor, pagador_id, data, partilhada"
             )
             .order(
                 "data",
                 {
-                    ascending: false
+                    ascending:
+                        false
+                }
+            )
+            .order(
+                "id",
+                {
+                    ascending:
+                        false
                 }
             );
 
 
     if (error) {
 
-        console.error(
-            error
+        throw new Error(
+            error.message
         );
 
-        return [];
-
     }
+
 
     return data || [];
 
 }
 
 
-async function carregarNomesPessoas() {
+async function eliminarDespesa(
+    id
+) {
 
-    const {
-        data,
-        error
-    } =
-        await supabaseClient
-            .from(
-                "pessoas"
-            )
-            .select(
-                "id, nome"
+    const despesa =
+        (
+            await supabaseClient
+                .from(
+                    "despesas_partilhadas"
+                )
+                .select(
+                    "id, descricao, valor"
+                )
+                .eq(
+                    "id",
+                    id
+                )
+                .single()
+        ).data;
+
+
+    if (!despesa) {
+
+        alert(
+            "Despesa não encontrada."
+        );
+
+        return;
+
+    }
+
+
+    const confirmar =
+        confirm(
+            `Eliminar "${despesa.descricao}" de ${euro(
+                despesa.valor
+            )}?`
+        );
+
+
+    if (
+        !confirmar
+    ) {
+
+        return;
+
+    }
+
+
+    try {
+
+        /*
+           Primeiro removemos as dívidas
+           associadas.
+        */
+
+        const {
+            error:
+                erroDivida
+        } =
+            await supabaseClient
+                .from(
+                    "dividas"
+                )
+                .delete()
+                .eq(
+                    "despesa_id",
+                    id
+                );
+
+
+        if (
+            erroDivida
+        ) {
+
+            throw new Error(
+                "Erro ao eliminar a dívida: " +
+                erroDivida.message
             );
 
+        }
 
-    if (error) {
+
+        /*
+           Depois removemos a despesa.
+        */
+
+        const {
+            error:
+                erroDespesa
+        } =
+            await supabaseClient
+                .from(
+                    "despesas_partilhadas"
+                )
+                .delete()
+                .eq(
+                    "id",
+                    id
+                );
+
+
+        if (
+            erroDespesa
+        ) {
+
+            throw new Error(
+                "Erro ao eliminar a despesa: " +
+                erroDespesa.message
+            );
+
+        }
+
+
+        /*
+           Remover categoria local.
+        */
+
+        if (
+            dados.categoriasLocais
+        ) {
+
+            delete dados.categoriasLocais[
+                id
+            ];
+
+            guardarDadosLocais();
+
+        }
+
+
+        await atualizarTudo();
+
+
+    } catch (error) {
 
         console.error(
             error
         );
 
-        return {};
+        alert(
+            error.message
+        );
 
     }
-
-
-    const nomes = {};
-
-    data.forEach(
-        pessoa => {
-
-            nomes[pessoa.id] =
-                pessoa.nome;
-
-        }
-    );
-
-    return nomes;
-
-}
-
-
-/* =====================================
-   FILTROS
-===================================== */
-
-function obterFiltroPesquisa() {
-
-    return (
-        document.getElementById(
-            "pesquisa"
-        )?.value ||
-        ""
-    )
-        .trim()
-        .toLowerCase();
-
-}
-
-
-function obterFiltroCategoria() {
-
-    return (
-        document.getElementById(
-            "filtroCategoria"
-        )?.value ||
-        ""
-    );
-
-}
-
-
-function obterFiltroMes() {
-
-    return (
-        document.getElementById(
-            "filtroMes"
-        )?.value ||
-        ""
-    );
-
-}
-
-
-function filtrarDespesas(
-    despesas,
-    nomes
-) {
-
-    const pesquisa =
-        obterFiltroPesquisa();
-
-    const categoria =
-        obterFiltroCategoria();
-
-    const mes =
-        obterFiltroMes();
-
-
-    /*
-       A categoria está guardada
-       apenas no histórico local.
-    */
-
-    return despesas.filter(
-        despesa => {
-
-            const correspondePesquisa =
-                !pesquisa ||
-                despesa.descricao
-                    .toLowerCase()
-                    .includes(
-                        pesquisa
-                    );
-
-
-            const movimento =
-                dados.movimentos.find(
-                    item =>
-                        item.supabase_id ===
-                        despesa.id
-                );
-
-
-            const correspondeCategoria =
-                !categoria ||
-                (
-                    movimento &&
-                    movimento.categoria ===
-                    categoria
-                );
-
-
-            const correspondeMes =
-                !mes ||
-                String(
-                    despesa.data
-                ).startsWith(
-                    mes
-                );
-
-
-            return (
-                correspondePesquisa &&
-                correspondeCategoria &&
-                correspondeMes
-            );
-
-        }
-    );
 
 }
 
@@ -626,7 +708,7 @@ function filtrarDespesas(
    HISTÓRICO
 ===================================== */
 
-async function renderTabela() {
+async function renderHistorico() {
 
     const tbody =
         document.getElementById(
@@ -639,146 +721,245 @@ async function renderTabela() {
     }
 
 
-    const despesas =
-        await carregarDespesas();
+    try {
 
-    const nomes =
-        await carregarNomesPessoas();
-
-
-    atualizarCategoriasFiltro(
-        despesas
-    );
+        const despesas =
+            await obterDespesas();
 
 
-    const filtradas =
-        filtrarDespesas(
-            despesas,
-            nomes
+        const pessoas =
+            await obterPessoas();
+
+
+        const nomes = {};
+
+
+        pessoas.forEach(
+            pessoa => {
+
+                nomes[
+                    pessoa.id
+                ] =
+                    pessoa.nome;
+
+            }
         );
 
 
-    tbody.innerHTML = "";
+        atualizarFiltroCategorias(
+            despesas
+        );
 
 
-    if (
-        filtradas.length === 0
-    ) {
+        const pesquisa =
+            document.getElementById(
+                "pesquisa"
+            ).value
+                .trim()
+                .toLowerCase();
+
+
+        const categoriaFiltro =
+            document.getElementById(
+                "filtroCategoria"
+            ).value;
+
+
+        const mesFiltro =
+            document.getElementById(
+                "filtroMes"
+            ).value;
+
+
+        const despesasFiltradas =
+            despesas.filter(
+                despesa => {
+
+                    const categoria =
+                        obterCategoria(
+                            despesa.id
+                        );
+
+
+                    const matchPesquisa =
+                        !pesquisa ||
+                        despesa.descricao
+                            .toLowerCase()
+                            .includes(
+                                pesquisa
+                            );
+
+
+                    const matchCategoria =
+                        !categoriaFiltro ||
+                        categoria ===
+                        categoriaFiltro;
+
+
+                    const matchMes =
+                        !mesFiltro ||
+                        String(
+                            despesa.data
+                        ).startsWith(
+                            mesFiltro
+                        );
+
+
+                    return (
+                        matchPesquisa &&
+                        matchCategoria &&
+                        matchMes
+                    );
+
+                }
+            );
+
+
+        tbody.innerHTML = "";
+
+
+        if (
+            despesasFiltradas.length ===
+            0
+        ) {
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7">
+                        Não existem despesas.
+                    </td>
+                </tr>
+            `;
+
+            return;
+
+        }
+
+
+        despesasFiltradas.forEach(
+            despesa => {
+
+                const tr =
+                    document.createElement(
+                        "tr"
+                    );
+
+
+                const pagador =
+                    nomes[
+                        despesa.pagador_id
+                    ] ||
+                    "Desconhecido";
+
+
+                const tipo =
+                    despesa.partilhada
+                        ? "Partilhada 50/50"
+                        : "Pessoal";
+
+
+                tr.innerHTML = `
+                    <td>
+                        ${escapeHTML(
+                            despesa.data
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            despesa.descricao
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            obterCategoria(
+                                despesa.id
+                            )
+                        )}
+                    </td>
+
+                    <td>
+                        ${tipo}
+                    </td>
+
+                    <td>
+                        ${euro(
+                            despesa.valor
+                        )}
+                    </td>
+
+                    <td>
+                        ${escapeHTML(
+                            pagador
+                        )}
+                    </td>
+
+                    <td>
+
+                        <button
+                            type="button"
+                            onclick="eliminarDespesa(
+                                ${despesa.id}
+                            )"
+                        >
+                            Eliminar
+                        </button>
+
+                    </td>
+                `;
+
+
+                tbody.appendChild(
+                    tr
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
 
         tbody.innerHTML = `
             <tr>
-                <td colspan="6">
-                    Não existem despesas.
+                <td colspan="7">
+                    Erro ao carregar despesas:
+                    ${escapeHTML(
+                        error.message
+                    )}
                 </td>
             </tr>
         `;
 
-        return;
     }
 
-
-    filtradas.forEach(
-        despesa => {
-
-            const tr =
-                document.createElement(
-                    "tr"
-                );
+}
 
 
-            const pagador =
-                nomes[
-                    despesa.pagador_id
-                ] ||
-                "Desconhecido";
+function obterCategoria(
+    id
+) {
 
-
-            /*
-               A despesa é sempre 50/50.
-            */
-
-            const metade =
-                Number(
-                    despesa.valor
-                ) / 2;
-
-
-            tr.innerHTML = `
-                <td>
-                    ${escapeHTML(
-                        despesa.data
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        despesa.descricao
-                    )}
-                </td>
-
-                <td>
-                    ${
-                        obterCategoriaDespesa(
-                            despesa.id
-                        )
-                    }
-                </td>
-
-                <td>
-                    ${euro(
-                        despesa.valor
-                    )}
-                </td>
-
-                <td>
-                    ${escapeHTML(
-                        pagador
-                    )}
-                </td>
-
-                <td>
-                    ${euro(
-                        metade
-                    )}
-                </td>
-            `;
-
-
-            tbody.appendChild(
-                tr
-            );
-
-        }
+    return (
+        dados.categoriasLocais?.[
+            id
+        ] ||
+        "Outros"
     );
 
 }
 
 
 /* =====================================
-   CATEGORIAS
+   FILTRO DE CATEGORIAS
 ===================================== */
 
-function obterCategoriaDespesa(
-    id
-) {
-
-    const movimento =
-        dados.movimentos.find(
-            item =>
-                item.supabase_id ===
-                id
-        );
-
-    return movimento
-        ? escapeHTML(
-            movimento.categoria
-        )
-        : "Outros";
-
-}
-
-
-function atualizarCategoriasFiltro(
+function atualizarFiltroCategorias(
     despesas
 ) {
 
@@ -786,6 +967,7 @@ function atualizarCategoriasFiltro(
         document.getElementById(
             "filtroCategoria"
         );
+
 
     if (!select) {
         return;
@@ -801,7 +983,7 @@ function atualizarCategoriasFiltro(
             ...new Set(
                 despesas.map(
                     despesa =>
-                        obterCategoriaDespesa(
+                        obterCategoria(
                             despesa.id
                         )
                 )
@@ -851,7 +1033,7 @@ function atualizarCategoriasFiltro(
 
 
 /* =====================================
-   SALDO LÍQUIDO
+   SALDO ENTRE PESSOAS
 ===================================== */
 
 async function atualizarSaldo() {
@@ -867,257 +1049,309 @@ async function atualizarSaldo() {
     }
 
 
-    container.textContent =
-        "A carregar saldo...";
+    try {
 
-
-    const {
-        data: dividas,
-        error: erroDividas
-    } =
-        await supabaseClient
-            .from("dividas")
-            .select(
-                "id, valor, valor_pago, liquidado, devedor_id, credor_id"
-            )
-            .eq(
-                "liquidado",
-                false
-            );
-
-
-    if (erroDividas) {
-
-        console.error(
-            erroDividas
-        );
-
-        container.textContent =
-            "Erro ao carregar saldo: " +
-            erroDividas.message;
-
-        return;
-    }
-
-
-    const nomes =
-        await carregarNomesPessoas();
-
-
-    const saldos = {};
-
-
-    dividas.forEach(
-        divida => {
-
-            const devedor =
-                Number(
-                    divida.devedor_id
-                );
-
-            const credor =
-                Number(
-                    divida.credor_id
-                );
-
-            const emFalta =
-                Math.max(
-                    0,
-                    Number(
-                        divida.valor
-                    ) -
-                    Number(
-                        divida.valor_pago ||
-                        0
+        const dividas =
+            (
+                await supabaseClient
+                    .from(
+                        "dividas"
                     )
-                );
-
-
-            if (
-                emFalta <= 0
-            ) {
-                return;
-            }
-
-
-            /*
-               Chave independente da direção.
-            */
-
-            const ids = [
-                devedor,
-                credor
-            ].sort(
-                (a, b) =>
-                    a - b
+                    .select(
+                        "id, valor, valor_pago, devedor_id, credor_id, liquidado"
+                    )
+                    .eq(
+                        "liquidado",
+                        false
+                    )
             );
 
 
-            const chave =
-                `${ids[0]}-${ids[1]}`;
+        if (
+            dividas.error
+        ) {
 
-
-            if (
-                !saldos[chave]
-            ) {
-
-                saldos[chave] = {
-                    pessoaA:
-                        ids[0],
-
-                    pessoaB:
-                        ids[1],
-
-                    saldo:
-                        0
-                };
-
-            }
-
-
-            if (
-                devedor ===
-                ids[0]
-            ) {
-
-                saldos[chave].saldo +=
-                    emFalta;
-
-            } else {
-
-                saldos[chave].saldo -=
-                    emFalta;
-
-            }
+            throw new Error(
+                dividas.error.message
+            );
 
         }
-    );
 
 
-    const pares =
-        Object.values(
-            saldos
-        )
-        .filter(
-            par =>
-                Math.abs(
-                    par.saldo
-                ) > 0.004
+        const pessoas =
+            await obterPessoas();
+
+
+        const nomes = {};
+
+
+        pessoas.forEach(
+            pessoa => {
+
+                nomes[
+                    pessoa.id
+                ] =
+                    pessoa.nome;
+
+            }
         );
 
 
-    if (
-        pares.length === 0
-    ) {
-
-        container.innerHTML =
-            "Neste momento, ninguém deve nada.";
-
-        return;
-    }
+        let saldo =
+            0;
 
 
-    container.innerHTML = "";
+        /*
+           saldo > 0:
+           pessoaA deve pessoaB
+
+           saldo < 0:
+           pessoaB deve pessoaA
+        */
+
+        const pares = {};
 
 
-    pares.forEach(
-        par => {
+        dividas.data.forEach(
+            divida => {
 
-            let devedor;
-            let credor;
-            let valor;
-
-
-            if (
-                par.saldo > 0
-            ) {
-
-                devedor =
-                    par.pessoaA;
-
-                credor =
-                    par.pessoaB;
-
-                valor =
-                    par.saldo;
-
-            } else {
-
-                devedor =
-                    par.pessoaB;
-
-                credor =
-                    par.pessoaA;
-
-                valor =
-                    Math.abs(
-                        par.saldo
+                const devedor =
+                    Number(
+                        divida.devedor_id
                     );
 
-            }
+
+                const credor =
+                    Number(
+                        divida.credor_id
+                    );
 
 
-            const div =
-                document.createElement(
-                    "div"
+                const falta =
+                    Math.max(
+                        0,
+                        Number(
+                            divida.valor
+                        ) -
+                        Number(
+                            divida.valor_pago ||
+                            0
+                        )
+                    );
+
+
+                if (
+                    falta <= 0
+                ) {
+                    return;
+                }
+
+
+                const ids = [
+                    devedor,
+                    credor
+                ].sort(
+                    (
+                        a,
+                        b
+                    ) => a - b
                 );
 
 
-            div.className =
-                "resumo-item";
+                const chave =
+                    `${ids[0]}-${ids[1]}`;
 
 
-            div.innerHTML = `
-                <strong>
-                    ${escapeHTML(
-                        nomes[devedor] ||
-                        "Desconhecido"
-                    )}
+                if (
+                    !pares[
+                        chave
+                    ]
+                ) {
 
-                    deve
-                    ${euro(valor)}
+                    pares[
+                        chave
+                    ] = {
 
-                    a
+                        pessoaA:
+                            ids[0],
 
-                    ${escapeHTML(
-                        nomes[credor] ||
-                        "Desconhecido"
-                    )}
-                </strong>
+                        pessoaB:
+                            ids[1],
 
-                <br>
+                        saldo:
+                            0
 
-                <small>
-                    Saldo líquido entre os dois.
-                </small>
+                    };
 
-                <br>
-
-                <button
-                    type="button"
-                    onclick="registarPagamento(
-                        ${devedor},
-                        ${credor},
-                        ${valor}
-                    )"
-                >
-                    Registar pagamento
-                </button>
-            `;
+                }
 
 
-            container.appendChild(
-                div
+                if (
+                    devedor ===
+                    ids[0]
+                ) {
+
+                    pares[
+                        chave
+                    ].saldo +=
+                        falta;
+
+                } else {
+
+                    pares[
+                        chave
+                    ].saldo -=
+                        falta;
+
+                }
+
+            }
+        );
+
+
+        const resultados =
+            Object.values(
+                pares
             );
 
+
+        if (
+            resultados.length ===
+            0
+        ) {
+
+            container.innerHTML =
+                "<strong>Ninguém deve nada neste momento.</strong>";
+
+            return;
+
         }
-    );
+
+
+        container.innerHTML = "";
+
+
+        resultados.forEach(
+            par => {
+
+                if (
+                    Math.abs(
+                        par.saldo
+                    ) <
+                    0.005
+                ) {
+
+                    return;
+
+                }
+
+
+                let devedor;
+                let credor;
+                let valor;
+
+
+                if (
+                    par.saldo > 0
+                ) {
+
+                    devedor =
+                        par.pessoaA;
+
+                    credor =
+                        par.pessoaB;
+
+                    valor =
+                        par.saldo;
+
+                } else {
+
+                    devedor =
+                        par.pessoaB;
+
+                    credor =
+                        par.pessoaA;
+
+                    valor =
+                        Math.abs(
+                            par.saldo
+                        );
+
+                }
+
+
+                const div =
+                    document.createElement(
+                        "div"
+                    );
+
+
+                div.className =
+                    "resumo-item";
+
+
+                div.innerHTML = `
+                    <strong>
+                        ${escapeHTML(
+                            nomes[
+                                devedor
+                            ] ||
+                            "Desconhecido"
+                        )}
+                        deve
+                        ${euro(
+                            valor
+                        )}
+                        a
+                        ${escapeHTML(
+                            nomes[
+                                credor
+                            ] ||
+                            "Desconhecido"
+                        )}
+                    </strong>
+
+                    <br>
+
+                    <button
+                        type="button"
+                        onclick="registarPagamento(
+                            ${devedor},
+                            ${credor},
+                            ${valor}
+                        )"
+                    >
+                        Registar pagamento
+                    </button>
+                `;
+
+
+                container.appendChild(
+                    div
+                );
+
+            }
+        );
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+
+        container.textContent =
+            "Erro ao calcular saldo: " +
+            error.message;
+
+    }
 
 }
 
 
 /* =====================================
-   REGISTAR PAGAMENTO
+   PAGAMENTO
 ===================================== */
 
 async function registarPagamento(
@@ -1130,24 +1364,26 @@ async function registarPagamento(
         prompt(
             `Saldo atual: ${euro(
                 saldoAtual
-            )}\n\nQuanto foi pago?`
+            )}\n\nValor pago:`
         );
 
 
     if (
-        resposta === null
+        resposta ===
+        null
     ) {
+
         return;
+
     }
 
 
     const valorPagamento =
         Number(
-            resposta
-                .replace(
-                    ",",
-                    "."
-                )
+            resposta.replace(
+                ",",
+                "."
+            )
         );
 
 
@@ -1159,10 +1395,11 @@ async function registarPagamento(
     ) {
 
         alert(
-            "Introduza um valor válido."
+            "Valor de pagamento inválido."
         );
 
         return;
+
     }
 
 
@@ -1176,153 +1413,503 @@ async function registarPagamento(
         );
 
         return;
+
     }
 
 
-    /*
-       Procuramos todas as dívidas
-       dessa direção.
-    */
+    try {
 
-    const {
-        data: dividas,
-        error
-    } =
-        await supabaseClient
-            .from("dividas")
-            .select(
-                "id, valor, valor_pago, liquidado, devedor_id, credor_id"
-            )
-            .eq(
-                "liquidado",
-                false
+        const {
+            data: dividas,
+            error
+        } =
+            await supabaseClient
+                .from(
+                    "dividas"
+                )
+                .select(
+                    "id, valor, valor_pago, devedor_id, credor_id"
+                )
+                .eq(
+                    "liquidado",
+                    false
+                );
+
+
+        if (error) {
+
+            throw new Error(
+                error.message
             );
 
+        }
 
-    if (error) {
+
+        let restante =
+            valorPagamento;
+
+
+        for (
+            const divida
+            of dividas
+        ) {
+
+            if (
+                restante <=
+                0
+            ) {
+
+                break;
+
+            }
+
+
+            if (
+                Number(
+                    divida.devedor_id
+                ) !==
+                Number(
+                    devedorId
+                ) ||
+                Number(
+                    divida.credor_id
+                ) !==
+                Number(
+                    credorId
+                )
+            ) {
+
+                continue;
+
+            }
+
+
+            const pago =
+                Number(
+                    divida.valor_pago ||
+                    0
+                );
+
+
+            const falta =
+                Math.max(
+                    0,
+                    Number(
+                        divida.valor
+                    ) -
+                    pago
+                );
+
+
+            if (
+                falta <=
+                0
+            ) {
+
+                continue;
+
+            }
+
+
+            const aplicar =
+                Math.min(
+                    restante,
+                    falta
+                );
+
+
+            const novoValorPago =
+                pago +
+                aplicar;
+
+
+            const liquidado =
+                novoValorPago >=
+                Number(
+                    divida.valor
+                );
+
+
+            const {
+                error:
+                    erroUpdate
+            } =
+                await supabaseClient
+                    .from(
+                        "dividas"
+                    )
+                    .update({
+
+                        valor_pago:
+                            novoValorPago,
+
+                        liquidado:
+                            liquidado
+
+                    })
+                    .eq(
+                        "id",
+                        divida.id
+                    );
+
+
+            if (
+                erroUpdate
+            ) {
+
+                throw new Error(
+                    erroUpdate.message
+                );
+
+            }
+
+
+            restante -=
+                aplicar;
+
+        }
+
 
         alert(
-            "Erro ao carregar dívidas:\n" +
+            "Pagamento registado com sucesso."
+        );
+
+
+        await atualizarTudo();
+
+
+    } catch (error) {
+
+        console.error(
+            error
+        );
+
+        alert(
+            "Erro ao registar pagamento:\n\n" +
             error.message
         );
 
-        return;
     }
 
-
-    let restante =
-        valorPagamento;
+}
 
 
-    /*
-       Pagamos primeiro as dívidas
-       do mesmo devedor/credor.
-    */
+/* =====================================
+   DASHBOARD
+===================================== */
 
-    for (
-        const divida of dividas
-    ) {
+async function atualizarDashboard() {
 
-        if (
-            restante <= 0
-        ) {
-            break;
-        }
+    try {
+
+        const despesas =
+            await obterDespesas();
 
 
-        if (
-            Number(
-                divida.devedor_id
-            ) !==
-            Number(devedorId) ||
-            Number(
-                divida.credor_id
-            ) !==
-            Number(credorId)
-        ) {
-
-            continue;
-        }
+        const pessoas =
+            await obterPessoas();
 
 
-        const atual =
-            Number(
-                divida.valor_pago ||
-                0
+        const nomes = {};
+
+
+        pessoas.forEach(
+            pessoa => {
+
+                nomes[
+                    pessoa.id
+                ] =
+                    pessoa.nome;
+
+            }
+        );
+
+
+        let total =
+            0;
+
+
+        let hugo =
+            0;
+
+
+        let natalia =
+            0;
+
+
+        despesas.forEach(
+            despesa => {
+
+                const valor =
+                    Number(
+                        despesa.valor
+                    );
+
+
+                total +=
+                    valor;
+
+
+                const nome =
+                    (
+                        nomes[
+                            despesa.pagador_id
+                        ] ||
+                        ""
+                    )
+                    .toLowerCase();
+
+
+                if (
+                    nome.includes(
+                        "hugo"
+                    )
+                ) {
+
+                    hugo +=
+                        valor;
+
+                }
+
+
+                if (
+                    nome.includes(
+                        "natalia"
+                    )
+                ) {
+
+                    natalia +=
+                        valor;
+
+                }
+
+            }
+        );
+
+
+        document.getElementById(
+            "totalDespesas"
+        ).textContent =
+            euro(
+                total
             );
 
 
-        const falta =
-            Number(
-                divida.valor
-            ) -
-            atual;
-
-
-        const aplicar =
-            Math.min(
-                restante,
-                falta
+        document.getElementById(
+            "totalPagoHugo"
+        ).textContent =
+            euro(
+                hugo
             );
 
 
-        const novoValorPago =
-            atual +
-            aplicar;
-
-
-        const liquidado =
-            novoValorPago >=
-            Number(
-                divida.valor
+        document.getElementById(
+            "totalPagoNatalia"
+        ).textContent =
+            euro(
+                natalia
             );
 
 
         const {
-            error: erroUpdate
+            data: dividas
         } =
             await supabaseClient
-                .from("dividas")
-                .update({
-
-                    valor_pago:
-                        novoValorPago,
-
-                    liquidado:
-                        liquidado
-
-                })
+                .from(
+                    "dividas"
+                )
+                .select(
+                    "valor, valor_pago, devedor_id, credor_id"
+                )
                 .eq(
-                    "id",
-                    divida.id
+                    "liquidado",
+                    false
                 );
 
 
-        if (
-            erroUpdate
-        ) {
+        const saldos = {};
 
-            alert(
-                "Erro ao registar pagamento:\n" +
-                erroUpdate.message
+
+        (
+            dividas ||
+            []
+        )
+        .forEach(
+            divida => {
+
+                const devedor =
+                    Number(
+                        divida.devedor_id
+                    );
+
+
+                const credor =
+                    Number(
+                        divida.credor_id
+                    );
+
+
+                const falta =
+                    Math.max(
+                        0,
+                        Number(
+                            divida.valor
+                        ) -
+                        Number(
+                            divida.valor_pago ||
+                            0
+                        )
+                    );
+
+
+                if (
+                    falta <=
+                    0
+                ) {
+
+                    return;
+
+                }
+
+
+                const ids = [
+                    devedor,
+                    credor
+                ].sort(
+                    (
+                        a,
+                        b
+                    ) => a - b
+                );
+
+
+                const chave =
+                    `${ids[0]}-${ids[1]}`;
+
+
+                if (
+                    !saldos[
+                        chave
+                    ]
+                ) {
+
+                    saldos[
+                        chave
+                    ] = {
+
+                        a:
+                            ids[0],
+
+                        b:
+                            ids[1],
+
+                        saldo:
+                            0
+
+                    };
+
+                }
+
+
+                if (
+                    devedor ===
+                    ids[0]
+                ) {
+
+                    saldos[
+                        chave
+                    ].saldo +=
+                        falta;
+
+                } else {
+
+                    saldos[
+                        chave
+                    ].saldo -=
+                        falta;
+
+                }
+
+            }
+        );
+
+
+        const saldoAtual =
+            document.getElementById(
+                "saldoAtual"
             );
 
-            return;
+
+        const primeiroSaldo =
+            Object.values(
+                saldos
+            )[0];
+
+
+        if (
+            !primeiroSaldo ||
+            Math.abs(
+                primeiroSaldo.saldo
+            ) <
+            0.005
+        ) {
+
+            saldoAtual.textContent =
+                "Ninguém deve nada";
+
+        } else {
+
+            const nomeA =
+                nomes[
+                    primeiroSaldo.a
+                ] ||
+                "Pessoa A";
+
+
+            const nomeB =
+                nomes[
+                    primeiroSaldo.b
+                ] ||
+                "Pessoa B";
+
+
+            if (
+                primeiroSaldo.saldo >
+                0
+            ) {
+
+                saldoAtual.textContent =
+                    `${nomeA} deve ${
+                        euro(
+                            primeiroSaldo.saldo
+                        )
+                    } a ${nomeB}`;
+
+            } else {
+
+                saldoAtual.textContent =
+                    `${nomeB} deve ${
+                        euro(
+                            Math.abs(
+                                primeiroSaldo.saldo
+                            )
+                        )
+                    } a ${nomeA}`;
+
+            }
+
         }
 
 
-        restante -=
-            aplicar;
+    } catch (
+        error
+    ) {
+
+        console.error(
+            error
+        );
 
     }
-
-
-    alert(
-        "Pagamento registado com sucesso."
-    );
-
-
-    await atualizarTudo();
 
 }
 
@@ -1341,31 +1928,38 @@ async function atualizarGrafico() {
 
     if (
         !canvas ||
-        typeof Chart === "undefined"
+        typeof Chart ===
+        "undefined"
     ) {
+
         return;
+
     }
 
 
     const despesas =
-        await carregarDespesas();
+        await obterDespesas();
 
 
-    const valores = {};
+    const resumo = {};
 
 
     despesas.forEach(
         despesa => {
 
             const categoria =
-                obterCategoriaDespesa(
+                obterCategoria(
                     despesa.id
                 );
 
 
-            valores[categoria] =
+            resumo[
+                categoria
+            ] =
                 (
-                    valores[categoria] ||
+                    resumo[
+                        categoria
+                    ] ||
                     0
                 ) +
                 Number(
@@ -1378,36 +1972,43 @@ async function atualizarGrafico() {
 
     const labels =
         Object.keys(
-            valores
+            resumo
         );
 
 
-    const data =
+    const valores =
         Object.values(
-            valores
+            resumo
         );
 
 
-    if (grafico) {
+    if (
+        grafico
+    ) {
 
         grafico.destroy();
 
-        grafico = null;
+        grafico =
+            null;
 
     }
 
 
     if (
-        !labels.length
+        labels.length ===
+        0
     ) {
 
         return;
+
     }
 
 
     grafico =
         new Chart(
-            canvas.getContext("2d"),
+            canvas.getContext(
+                "2d"
+            ),
             {
 
                 type:
@@ -1415,12 +2016,19 @@ async function atualizarGrafico() {
 
                 data: {
 
-                    labels,
+                    labels:
+
+                        labels,
 
                     datasets: [
+
                         {
-                            data
+
+                            data:
+                                valores
+
                         }
+
                     ]
 
                 },
@@ -1450,370 +2058,6 @@ async function atualizarGrafico() {
 
 
 /* =====================================
-   RESUMO
-===================================== */
-
-async function atualizarResumo() {
-
-    const totalDespesasElemento =
-        document.getElementById(
-            "totalDespesas"
-        );
-
-    const totalPagoHugoElemento =
-        document.getElementById(
-            "totalPagoHugo"
-        );
-
-    const totalPagoNataliaElemento =
-        document.getElementById(
-            "totalPagoNatalia"
-        );
-
-    const saldoElemento =
-        document.getElementById(
-            "saldoAtual"
-        );
-
-
-    if (
-        !totalDespesasElemento ||
-        !totalPagoHugoElemento ||
-        !totalPagoNataliaElemento ||
-        !saldoElemento
-    ) {
-        return;
-    }
-
-
-    totalDespesasElemento.textContent =
-        "A carregar...";
-
-    totalPagoHugoElemento.textContent =
-        "A carregar...";
-
-    totalPagoNataliaElemento.textContent =
-        "A carregar...";
-
-    saldoElemento.textContent =
-        "A calcular...";
-
-
-    /* =================================
-       DESPESAS
-    ================================= */
-
-    const {
-        data: despesas,
-        error: erroDespesas
-    } =
-        await supabaseClient
-            .from("despesas_partilhadas")
-            .select(
-                "id, valor, pagador_id"
-            );
-
-
-    if (erroDespesas) {
-
-        console.error(
-            erroDespesas
-        );
-
-        totalDespesasElemento.textContent =
-            "Erro";
-
-        totalPagoHugoElemento.textContent =
-            "Erro";
-
-        totalPagoNataliaElemento.textContent =
-            "Erro";
-
-        saldoElemento.textContent =
-            "Erro";
-
-        return;
-    }
-
-
-    /* =================================
-       PESSOAS
-    ================================= */
-
-    const {
-        data: pessoas,
-        error: erroPessoas
-    } =
-        await supabaseClient
-            .from("pessoas")
-            .select(
-                "id, nome"
-            );
-
-
-    if (erroPessoas) {
-
-        console.error(
-            erroPessoas
-        );
-
-        return;
-    }
-
-
-    const nomes = {};
-
-    pessoas.forEach(
-        pessoa => {
-
-            nomes[
-                Number(pessoa.id)
-            ] = pessoa.nome;
-
-        }
-    );
-
-
-    let totalDespesas = 0;
-
-    let totalHugo = 0;
-
-    let totalNatalia = 0;
-
-
-    despesas.forEach(
-        despesa => {
-
-            const valor =
-                Number(
-                    despesa.valor
-                );
-
-
-            totalDespesas +=
-                valor;
-
-
-            const nomePagador =
-                nomes[
-                    Number(
-                        despesa.pagador_id
-                    )
-                ];
-
-
-            if (
-                nomePagador &&
-                nomePagador.toLowerCase()
-                    .includes("hugo")
-            ) {
-
-                totalHugo +=
-                    valor;
-
-            }
-
-
-            if (
-                nomePagador &&
-                nomePagador.toLowerCase()
-                    .includes("natalia")
-            ) {
-
-                totalNatalia +=
-                    valor;
-
-            }
-
-        }
-    );
-
-
-    /* =================================
-       SALDO ENTRE HUGO E NATALIA
-    ================================= */
-
-    const {
-        data: dividas,
-        error: erroDividas
-    } =
-        await supabaseClient
-            .from("dividas")
-            .select(
-                "valor, valor_pago, devedor_id, credor_id, liquidado"
-            );
-
-
-    if (erroDividas) {
-
-        console.error(
-            erroDividas
-        );
-
-        saldoElemento.textContent =
-            "Erro";
-
-    } else {
-
-        const saldos = {};
-
-        (dividas || [])
-            .forEach(
-                divida => {
-
-                    const valorEmFalta =
-                        Math.max(
-                            0,
-                            Number(
-                                divida.valor
-                            ) -
-                            Number(
-                                divida.valor_pago ||
-                                0
-                            )
-                        );
-
-
-                    if (
-                        valorEmFalta <= 0
-                    ) {
-                        return;
-                    }
-
-
-                    const devedor =
-                        Number(
-                            divida.devedor_id
-                        );
-
-                    const credor =
-                        Number(
-                            divida.credor_id
-                        );
-
-
-                    const chave =
-                        "hugo-natalia";
-
-
-                    if (
-                        !saldos[chave]
-                    ) {
-
-                        saldos[chave] =
-                            {
-                                hugoDeveNatalia:
-                                    0,
-
-                                nataliaDeveHugo:
-                                    0
-                            };
-
-                    }
-
-
-                    const nomeDevedor =
-                        (
-                            nomes[
-                                devedor
-                            ] ||
-                            ""
-                        )
-                            .toLowerCase();
-
-
-                    if (
-                        nomeDevedor
-                            .includes("hugo")
-                    ) {
-
-                        saldos[chave]
-                            .hugoDeveNatalia +=
-                            valorEmFalta;
-
-                    } else {
-
-                        saldos[chave]
-                            .nataliaDeveHugo +=
-                            valorEmFalta;
-
-                    }
-
-                }
-            );
-
-
-        const saldoHugo =
-            saldos["hugo-natalia"]
-                ?.hugoDeveNatalia ||
-            0;
-
-        const saldoNatalia =
-            saldos["hugo-natalia"]
-                ?.nataliaDeveHugo ||
-            0;
-
-
-        const saldoLiquido =
-            saldoNatalia -
-            saldoHugo;
-
-
-        if (
-            Math.abs(
-                saldoLiquido
-            ) < 0.005
-        ) {
-
-            saldoElemento.textContent =
-                "Ninguém deve nada";
-
-        } else if (
-            saldoLiquido > 0
-        ) {
-
-            saldoElemento.textContent =
-                `Natalia deve ${
-                    euro(
-                        saldoLiquido
-                    )
-                } a Hugo`;
-
-        } else {
-
-            saldoElemento.textContent =
-                `Hugo deve ${
-                    euro(
-                        Math.abs(
-                            saldoLiquido
-                        )
-                    )
-                } a Natalia`;
-
-        }
-
-    }
-
-
-    totalDespesasElemento.textContent =
-        euro(
-            totalDespesas
-        );
-
-    totalPagoHugoElemento.textContent =
-        euro(
-            totalHugo
-        );
-
-    totalPagoNataliaElemento.textContent =
-        euro(
-            totalNatalia
-        );
-
-}
-
-
-/* =====================================
    FILTROS
 ===================================== */
 
@@ -1824,10 +2068,12 @@ function configurarFiltros() {
             "pesquisa"
         );
 
+
     const categoria =
         document.getElementById(
             "filtroCategoria"
         );
+
 
     const mes =
         document.getElementById(
@@ -1835,31 +2081,37 @@ function configurarFiltros() {
         );
 
 
-    if (pesquisa) {
+    if (
+        pesquisa
+    ) {
 
         pesquisa.addEventListener(
             "input",
-            atualizarTudo
+            renderHistorico
         );
 
     }
 
 
-    if (categoria) {
+    if (
+        categoria
+    ) {
 
         categoria.addEventListener(
             "change",
-            atualizarTudo
+            renderHistorico
         );
 
     }
 
 
-    if (mes) {
+    if (
+        mes
+    ) {
 
         mes.addEventListener(
             "change",
-            atualizarTudo
+            renderHistorico
         );
 
     }
@@ -1873,15 +2125,18 @@ function limparFiltros() {
         "pesquisa"
     ).value = "";
 
+
     document.getElementById(
         "filtroCategoria"
     ).value = "";
+
 
     document.getElementById(
         "filtroMes"
     ).value = "";
 
-    atualizarTudo();
+
+    renderHistorico();
 
 }
 
@@ -1892,9 +2147,9 @@ function limparFiltros() {
 
 async function atualizarTudo() {
 
-    await atualizarResumo();
+    await atualizarDashboard();
 
-    await renderTabela();
+    await renderHistorico();
 
     await atualizarSaldo();
 
@@ -1904,140 +2159,257 @@ async function atualizarTudo() {
 
 
 /* =====================================
-   EXPORTAÇÃO
+   EXPORTAR JSON
 ===================================== */
 
-function exportarJSON() {
+async function exportarJSON() {
 
-    const ficheiro =
-        new Blob(
-            [
-                JSON.stringify(
-                    dados,
-                    null,
-                    2
-                )
-            ],
+    try {
+
+        const despesas =
+            await obterDespesas();
+
+
+        const nomes =
+            await carregarNomes();
+
+
+        const backup =
             {
-                type:
-                    "application/json"
-            }
+                exportadoEm:
+                    new Date()
+                        .toISOString(),
+
+                despesas,
+                nomes
+            };
+
+
+        const blob =
+            new Blob(
+                [
+                    JSON.stringify(
+                        backup,
+                        null,
+                        2
+                    )
+                ],
+                {
+                    type:
+                        "application/json"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const a =
+            document.createElement(
+                "a"
+            );
+
+
+        a.href =
+            url;
+
+        a.download =
+            "gestor-financeiro.json";
+
+
+        document.body.appendChild(
+            a
         );
 
 
-    const url =
-        URL.createObjectURL(
-            ficheiro
+        a.click();
+
+
+        a.remove();
+
+
+        URL.revokeObjectURL(
+            url
         );
 
 
-    const link =
-        document.createElement(
-            "a"
+    } catch (
+        error
+    ) {
+
+        alert(
+            error.message
         );
 
-
-    link.href = url;
-
-    link.download =
-        "gestor-financeiro.json";
-
-    link.click();
-
-
-    URL.revokeObjectURL(
-        url
-    );
+    }
 
 }
 
 
-function exportarCSV() {
+async function carregarNomes() {
 
-    const linhas = [
-        [
-            "Data",
-            "Descrição",
-            "Categoria",
-            "Valor",
-            "Pagou",
-            "Parte"
-        ]
-    ];
+    const pessoas =
+        await obterPessoas();
 
+    const nomes = {};
 
-    dados.movimentos.forEach(
-        movimento => {
+    pessoas.forEach(
+        pessoa => {
 
-            linhas.push([
-                movimento.data,
-                movimento.descricao,
-                movimento.categoria,
-                movimento.valor,
-                movimento.pagadorNome,
-                movimento.metade
-            ]);
+            nomes[
+                pessoa.id
+            ] =
+                pessoa.nome;
 
         }
     );
 
+    return nomes;
 
-    const csv =
-        linhas
-            .map(
-                linha =>
-                    linha
-                        .map(
-                            valor =>
-                                `"${String(
-                                    valor ||
-                                    ""
-                                ).replaceAll(
-                                    '"',
-                                    '""'
-                                )}"`
-                        )
-                        .join(",")
-            )
-            .join("\n");
+}
 
 
-    const blob =
-        new Blob(
+/* =====================================
+   EXPORTAR CSV
+===================================== */
+
+async function exportarCSV() {
+
+    try {
+
+        const despesas =
+            await obterDespesas();
+
+
+        const nomes =
+            await carregarNomes();
+
+
+        const linhas = [
+
             [
-                "\uFEFF" +
-                csv
-            ],
-            {
-                type:
-                    "text/csv;charset=utf-8;"
+                "Data",
+                "Descrição",
+                "Categoria",
+                "Tipo",
+                "Valor",
+                "Pagou"
+            ]
+
+        ];
+
+
+        despesas.forEach(
+            despesa => {
+
+                linhas.push([
+
+                    despesa.data,
+
+                    despesa.descricao,
+
+                    obterCategoria(
+                        despesa.id
+                    ),
+
+                    despesa.partilhada
+                        ? "Partilhada 50/50"
+                        : "Pessoal",
+
+                    despesa.valor,
+
+                    nomes[
+                        despesa.pagador_id
+                    ] ||
+                    ""
+
+                ]);
+
             }
         );
 
 
-    const url =
-        URL.createObjectURL(
-            blob
+        const csv =
+            linhas
+                .map(
+                    linha =>
+                        linha
+                            .map(
+                                valor =>
+                                    `"${String(
+                                        valor
+                                        ?? ""
+                                    ).replaceAll(
+                                        '"',
+                                        '""'
+                                    )}"`
+                            )
+                            .join(",")
+                )
+                .join("\n");
+
+
+        const blob =
+            new Blob(
+                [
+                    "\uFEFF" +
+                    csv
+                ],
+                {
+                    type:
+                        "text/csv;charset=utf-8;"
+                }
+            );
+
+
+        const url =
+            URL.createObjectURL(
+                blob
+            );
+
+
+        const a =
+            document.createElement(
+                "a"
+            );
+
+
+        a.href =
+            url;
+
+
+        a.download =
+            "gestor-financeiro.csv";
+
+
+        document.body.appendChild(
+            a
         );
 
 
-    const link =
-        document.createElement(
-            "a"
+        a.click();
+
+
+        a.remove();
+
+
+        URL.revokeObjectURL(
+            url
         );
 
 
-    link.href = url;
+    } catch (
+        error
+    ) {
 
-    link.download =
-        "despesas-50-50.csv";
+        alert(
+            error.message
+        );
 
-    link.click();
-
-
-    URL.revokeObjectURL(
-        url
-    );
+    }
 
 }
 
@@ -2048,31 +2420,16 @@ function exportarCSV() {
 
 async function iniciarAplicacao() {
 
-    const data =
-        document.getElementById(
-            "dataDespesa"
-        );
-
-    if (data) {
-        data.value =
-            hojeISO();
-    }
-
+    prepararData();
 
     configurarFiltros();
 
-
-    await carregarPessoas();
-
+    await carregarPagadores();
 
     await atualizarTudo();
 
 }
 
-
-/* =====================================
-   START
-===================================== */
 
 document.addEventListener(
     "DOMContentLoaded",

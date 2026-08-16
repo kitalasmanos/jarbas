@@ -2262,23 +2262,13 @@ async function iniciarAplicacao() {
 
     configurarFiltros();
 
-    const filtroMes =
-        document.getElementById(
-            "filtroMes"
-        );
-
-    if (
-        filtroMes &&
-        !filtroMes.value
-    ) {
-
-        filtroMes.value =
-            obterMesAtual();
-
-    }
-
     await carregarPagadores();
 
     await atualizarTudo();
 
 }
+
+document.addEventListener(
+    "DOMContentLoaded",
+    iniciarAplicacao
+);

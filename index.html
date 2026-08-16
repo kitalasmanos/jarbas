@@ -1,8 +1,14 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Gestor Financeiro</title>
 
@@ -20,24 +26,29 @@
         rel="stylesheet"
         href="style.css"
     >
+
 </head>
+
 
 <body>
 
 <header class="header">
-    <div class="header-content">
-        <h1>💰 Gestor Financeiro</h1>
-        <p>Receitas · Despesas · Orçamento · Dívidas</p>
-    </div>
+
+    <h1>💰 Gestor Financeiro</h1>
+
+    <p>
+        Despesas · Contas · Quem deve a quem
+    </p>
+
 </header>
 
 
 <main class="container">
 
 
-    <!-- =========================================
-         DASHBOARD
-    ========================================== -->
+    <!-- =====================================
+         RESUMO
+    ====================================== -->
 
     <section class="card">
 
@@ -47,22 +58,23 @@
 
             <div class="stat-card saldo">
                 <span>Saldo</span>
-                <strong id="saldoAtual">0,00 €</strong>
+                <strong id="saldoAtual">
+                    0,00 €
+                </strong>
             </div>
 
             <div class="stat-card receita">
                 <span>Receitas</span>
-                <strong id="totalReceitas">0,00 €</strong>
+                <strong id="totalReceitas">
+                    0,00 €
+                </strong>
             </div>
 
             <div class="stat-card despesa">
                 <span>Despesas</span>
-                <strong id="totalDespesas">0,00 €</strong>
-            </div>
-
-            <div class="stat-card orcamento">
-                <span>Orçamento restante</span>
-                <strong id="orcamentoRestante">0,00 €</strong>
+                <strong id="totalDespesas">
+                    0,00 €
+                </strong>
             </div>
 
         </div>
@@ -70,255 +82,267 @@
     </section>
 
 
-    <!-- =========================================
-         ORÇAMENTO
-    ========================================== -->
+    <!-- =====================================
+         NOVA DESPESA
+    ====================================== -->
 
     <section class="card">
 
-        <h2>🎯 Orçamento Mensal</h2>
+        <h2>➕ Nova Despesa</h2>
+
+        <p class="section-help">
+            Todas as despesas são divididas 50/50.
+            Escolhe apenas quem pagou.
+        </p>
+
 
         <div class="form-grid">
 
+
             <div>
-                <label for="orcamentoMensal">
-                    Orçamento (€)
+
+                <label for="descricao">
+                    Descrição
                 </label>
 
                 <input
-                    type="number"
-                    id="orcamentoMensal"
-                    min="0"
-                    step="0.01"
-                    placeholder="1000.00"
+                    id="descricao"
+                    type="text"
+                    placeholder="Ex.: Água"
                 >
-            </div>
 
-            <div class="form-button">
-                <button
-                    type="button"
-                    onclick="guardarOrcamento()"
-                >
-                    Guardar Orçamento
-                </button>
-            </div>
-
-        </div>
-
-        <div class="progress-container">
-            <div id="progressBar"></div>
-        </div>
-
-        <p id="percentagemOrcamento">
-            Sem orçamento definido
-        </p>
-
-    </section>
-
-
-    <!-- =========================================
-         NOVO MOVIMENTO
-    ========================================== -->
-
-    <section class="card">
-
-        <h2>➕ Novo Movimento</h2>
-
-        <div class="form-grid">
-
-            <div>
-                <label for="tipo">
-                    Tipo
-                </label>
-
-                <select id="tipo">
-                    <option value="despesa">
-                        Despesa
-                    </option>
-
-                    <option value="receita">
-                        Receita
-                    </option>
-                </select>
             </div>
 
 
             <div>
+
                 <label for="categoria">
                     Categoria
                 </label>
 
                 <select id="categoria">
 
-                    <optgroup label="Despesas">
+                    <option>
+                        Supermercado
+                    </option>
 
-                        <option>Supermercado</option>
-                        <option>Gasolina</option>
-                        <option>Portagens</option>
-                        <option>Comer Fora</option>
-                        <option>Água</option>
-                        <option>Luz</option>
-                        <option>Gás</option>
-                        <option>Casa</option>
-                        <option>Telecomunicações</option>
-                        <option>Saúde</option>
-                        <option>Lazer</option>
-                        <option>Outros</option>
+                    <option>
+                        Água
+                    </option>
 
-                    </optgroup>
+                    <option>
+                        Luz
+                    </option>
 
-                    <optgroup label="Receitas">
+                    <option>
+                        Gás
+                    </option>
 
-                        <option>Salário</option>
-                        <option>Prémios</option>
-                        <option>Reembolsos</option>
+                    <option>
+                        Gasolina
+                    </option>
 
-                    </optgroup>
+                    <option>
+                        Casa
+                    </option>
+
+                    <option>
+                        Comer Fora
+                    </option>
+
+                    <option>
+                        Lazer
+                    </option>
+
+                    <option>
+                        Saúde
+                    </option>
+
+                    <option>
+                        Telecomunicações
+                    </option>
+
+                    <option>
+                        Outros
+                    </option>
 
                 </select>
+
             </div>
 
 
             <div>
-                <label for="descricao">
-                    Descrição
-                </label>
 
-                <input
-                    type="text"
-                    id="descricao"
-                    placeholder="Ex.: Supermercado"
-                >
-            </div>
-
-
-            <div>
                 <label for="valor">
                     Valor (€)
                 </label>
 
                 <input
-                    type="number"
                     id="valor"
+                    type="number"
                     min="0"
                     step="0.01"
-                    placeholder="0.00"
+                    placeholder="50.00"
                 >
+
             </div>
 
 
             <div>
-                <label for="dataMovimento">
+
+                <label for="pagador">
+                    Quem pagou?
+                </label>
+
+                <select id="pagador">
+
+                    <option value="">
+                        A carregar...
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div>
+
+                <label for="dataDespesa">
                     Data
                 </label>
 
                 <input
+                    id="dataDespesa"
                     type="date"
-                    id="dataMovimento"
                 >
+
             </div>
 
 
             <div class="form-button">
+
                 <button
                     type="button"
-                    onclick="adicionarMovimento()"
+                    onclick="registarDespesa()"
                 >
-                    Adicionar Movimento
+                    Registar Despesa
                 </button>
+
             </div>
+
 
         </div>
 
     </section>
 
 
-    <!-- =========================================
-         PESQUISA E FILTROS
-    ========================================== -->
+    <!-- =====================================
+         SALDO ENTRE PESSOAS
+    ====================================== -->
 
     <section class="card">
 
-        <h2>🔍 Pesquisa</h2>
+        <h2>💸 Quem Deve a Quem</h2>
+
+        <div id="saldoPessoas">
+            A carregar saldo...
+        </div>
+
+    </section>
+
+
+    <!-- =====================================
+         HISTÓRICO
+    ====================================== -->
+
+    <section class="card">
+
+        <h2>📅 Histórico</h2>
+
 
         <div class="form-grid">
 
             <div>
+
                 <label for="pesquisa">
-                    Descrição
+                    Pesquisar
                 </label>
 
                 <input
-                    type="text"
                     id="pesquisa"
-                    placeholder="Pesquisar..."
+                    type="text"
+                    placeholder="Pesquisar descrição..."
                 >
+
             </div>
 
 
             <div>
+
                 <label for="filtroCategoria">
                     Categoria
                 </label>
 
                 <select id="filtroCategoria">
+
                     <option value="">
                         Todas
                     </option>
+
                 </select>
+
             </div>
 
 
             <div>
+
                 <label for="filtroMes">
                     Mês
                 </label>
 
                 <input
-                    type="month"
                     id="filtroMes"
+                    type="month"
                 >
+
             </div>
 
-
             <div class="form-button">
+
                 <button
                     type="button"
                     onclick="limparFiltros()"
                 >
-                    Limpar Filtros
+                    Limpar
                 </button>
+
             </div>
 
         </div>
 
-    </section>
-
-
-    <!-- =========================================
-         HISTÓRICO
-    ========================================== -->
-
-    <section class="card">
-
-        <h2>📅 Histórico de Movimentos</h2>
 
         <div class="table-container">
 
             <table>
 
                 <thead>
+
                     <tr>
+
                         <th>Data</th>
-                        <th>Tipo</th>
-                        <th>Categoria</th>
                         <th>Descrição</th>
+                        <th>Categoria</th>
                         <th>Valor</th>
-                        <th>Ações</th>
+                        <th>Pagou</th>
+                        <th>Parte do outro</th>
+
                     </tr>
+
                 </thead>
 
-                <tbody id="tabelaMovimentos">
+
+                <tbody id="tabelaDespesas">
+
                 </tbody>
 
             </table>
@@ -328,169 +352,32 @@
     </section>
 
 
-    <!-- =========================================
-         ESTATÍSTICAS
-    ========================================== -->
+    <!-- =====================================
+         GRÁFICO
+    ====================================== -->
 
     <section class="card">
 
-        <h2>📈 Estatísticas</h2>
+        <h2>📈 Despesas por Categoria</h2>
 
         <div class="chart-container">
-            <canvas id="graficoCategorias"></canvas>
-        </div>
 
-    </section>
-
-
-    <!-- =========================================
-         RESUMO POR CATEGORIA
-    ========================================== -->
-
-    <section class="card">
-
-        <h2>📂 Gastos por Categoria</h2>
-
-        <div id="resumoCategorias">
-            Sem despesas registadas.
-        </div>
-
-    </section>
-
-
-    <!-- =========================================
-         QUEM DEVE A QUEM
-    ========================================== -->
-
-    <section class="card">
-
-        <h2>👥 Quem Deve a Quem</h2>
-
-        <p class="section-help">
-            Regista uma despesa partilhada quando uma pessoa
-            paga e outra pessoa fica a dever uma parte.
-        </p>
-
-
-        <div class="form-grid">
-
-            <div>
-                <label for="pagadorDivida">
-                    Quem pagou?
-                </label>
-
-                <select id="pagadorDivida">
-                    <option value="">
-                        A carregar pessoas...
-                    </option>
-                </select>
-            </div>
-
-
-            <div>
-                <label for="devedorDivida">
-                    Quem deve?
-                </label>
-
-                <select id="devedorDivida">
-                    <option value="">
-                        A carregar pessoas...
-                    </option>
-                </select>
-            </div>
-
-
-            <div>
-                <label for="descricaoDivida">
-                    Descrição
-                </label>
-
-                <input
-                    type="text"
-                    id="descricaoDivida"
-                    placeholder="Ex.: Água"
-                >
-            </div>
-
-
-            <div>
-                <label for="valorTotalDivida">
-                    Valor total pago (€)
-                </label>
-
-                <input
-                    type="number"
-                    id="valorTotalDivida"
-                    min="0"
-                    step="0.01"
-                    placeholder="50.00"
-                >
-            </div>
-
-
-            <div>
-                <label for="valorDevido">
-                    Valor que deve (€)
-                </label>
-
-                <input
-                    type="number"
-                    id="valorDevido"
-                    min="0"
-                    step="0.01"
-                    placeholder="25.00"
-                >
-            </div>
-
-
-            <div>
-                <label for="dataDivida">
-                    Data
-                </label>
-
-                <input
-                    type="date"
-                    id="dataDivida"
-                >
-            </div>
-
-
-            <div class="form-button">
-                <button
-                    type="button"
-                    onclick="registarDivida()"
-                >
-                    Registar Dívida
-                </button>
-            </div>
+            <canvas
+                id="graficoCategorias"
+            ></canvas>
 
         </div>
 
     </section>
 
 
-    <!-- =========================================
-         SALDOS ENTRE PESSOAS
-    ========================================== -->
+    <!-- =====================================
+         EXPORTAÇÃO
+    ====================================== -->
 
     <section class="card">
 
-        <h2>💸 Saldos</h2>
-
-        <div id="listaDividas">
-            A carregar saldos...
-        </div>
-
-    </section>
-
-
-    <!-- =========================================
-         BACKUP
-    ========================================== -->
-
-    <section class="card">
-
-        <h2>💾 Dados e Backup</h2>
+        <h2>💾 Dados</h2>
 
         <div class="actions">
 
@@ -508,35 +395,6 @@
                 Exportar CSV
             </button>
 
-            <button
-                type="button"
-                onclick="window.print()"
-            >
-                Imprimir
-            </button>
-
-        </div>
-
-
-        <div class="import-area">
-
-            <label for="importFile">
-                Importar backup JSON
-            </label>
-
-            <input
-                type="file"
-                id="importFile"
-                accept=".json"
-            >
-
-            <button
-                type="button"
-                onclick="importarJSON()"
-            >
-                Importar Backup
-            </button>
-
         </div>
 
     </section>
@@ -547,28 +405,39 @@
 
 <footer class="footer">
 
-    <p>
-        Gestor Financeiro © 2026
-    </p>
+    Gestor Financeiro © 2026
 
 </footer>
 
 
-<!-- =========================================
-     SUPABASE
-========================================== -->
-
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 <script src="supabase.js"></script>
+
 <script src="app.js"></script>
 
+
 <script>
-    if ("serviceWorker" in navigator) {
+
+    if (
+        "serviceWorker" in navigator
+    ) {
+
         navigator.serviceWorker.register(
             "service-worker.js"
+        ).catch(
+            error => console.error(
+                error
+            )
         );
+
     }
+
 </script>
 
+
 </body>
+
 </html>

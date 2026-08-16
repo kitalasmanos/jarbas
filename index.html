@@ -344,33 +344,40 @@
             </div>
 
 
-            <div>
+          <div>
 
-                <label for="filtroMes">
-                    Mês
-                </label>
+    <label for="filtroMes">
+        Mês
+    </label>
 
-                <input
-                    id="filtroMes"
-                    type="month"
-                >
+    <input
+        id="filtroMes"
+        type="month"
+    >
 
-            </div>
+</div>
 
+<div class="form-button">
 
-            <div class="form-button">
+    <button
+        type="button"
+        onclick="limparFiltros()"
+    >
+        Limpar filtros
+    </button>
 
-                <button
-                    type="button"
-                    onclick="limparFiltros()"
-                >
-                    Limpar filtros
-                </button>
+</div>
 
-            </div>
+<div class="form-button">
 
-        </div>
+    <button
+        type="button"
+        onclick="fecharMesAtual()"
+    >
+        📧 Fechar mês
+    </button>
 
+</div>
 
         <div class="table-container">
 
